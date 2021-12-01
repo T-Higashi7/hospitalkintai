@@ -38,7 +38,7 @@
         <button v-on:click="join">追加</button> 
 
         <div v-for= "(day,index) in calendarData" key="index" >
-            <p>{{day}}}</p>
+            <p>{{day}}</p>
         </div>
 
         <div v-for= "(week,index) in calendarWeek" key="index" >
