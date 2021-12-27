@@ -3,62 +3,25 @@
 　
 　<p>勤怠表入力<br>({{ subject_month }})
      <button @click="goPrevMonth">前月</button>
-     <button @click="calendarWeek">検証用</button>
-  </p> 
+     <button @click="goNextMonth">次月</button>
+     <button @click="totalWorkday">検証用</button>
+  </p>
+  <div class = total> 
+  <p>合計勤務日数：{{ this.totalwork }}日</p>
+  <p>合計残業時間：{{ totalovertime }}時間</p>
+  </div>
       <div class="container mt-3">
-        <p>　　　日付：{{this.input_date}} <input type="date" v-model="input_date"></p>
-        <p>勤務：{{this.input_work}} 
-          <select v-model="input_work">
-            <option value=〇>〇</option>
-            <option value=〇/当>〇/当</option>
-            <option value=A/公>A/公</option>
-            <option value=公/A>公/A</option>
-            <option value=公/当>公/当</option>
-            <option value=公>公</option>
-            <option value=有給>有給</option>
-            <option value=振休>振休</option>
-          </select>
-        </p>
-        <p>勤務開始時間：{{this.input_starttime}} <input type="time" v-model="input_starttime"></p>
-        <p>勤務終了時間：{{this.input_endtime}} <input type="time" v-model="input_endtime"></p>
-        <p>残業：{{this.input_overtime}} 
-          <select v-model="input_overtime">
-            <option value=0>0</option>
-            <option value=0.5>0.5</option>
-            <option value=1.0>1.0</option>
-            <option value=1.5>1.5</option>
-            <option value=2.0>2.0</option>
-            <option value=2.5>2.5</option>
-            <option value=3.0>3.0</option>
-            <option value=3.5>3.5</option>
-            <option value=4.0>4.0</option>
-          </select>
-        </p>
-        <p>　　　残業理由：<input type="text" v-model="input_Reason"></p>
-        <button v-on:click="join">追加</button> 
-
-        <div v-for= "(day,index) in calendarData" key="index" >
-            <p>{{day}}</p>
-        </div>
-
-        <div v-for= "(week,index) in calendarWeek" key="index" >
-            <p>{{index}}{{week}}</p>
-        </div>
 
          <table align="center">
 　           <tr>
-                <th>日付</th><th>勤務</th><th>勤務開始時間</th><th>勤務終了時間</th><th>残業</th><th>残業理由・その他備考</th>
+                <th>日付</th><th>曜日</th><th>勤務</th><th>勤務開始時間</th><th>勤務終了時間</th><th>残業</th><th>残業理由・その他備考</th>
              </tr>
-             <tr v-for="(element,index) of meisaiList" key="index" >
-                <td>{{element.date}}</td><td>{{element.work}}</td><td>{{element.starttime}}</td><td>{{element.endtime}}</td>
-                <td>{{element.overtime}}</td><td>{{element.Reason}}</td>
-                  <div v-if="element.show">
-                     <button v-on:click="edit(element)" >編集</button>
-                     <button v-on:click="deleate(index)" >削除</button>
-                  </div>
-                  <div v-if="!element.show">
-                    <input type="date" v-model="element.editdate">
-                    <select v-model="element.editwork">
+             <tr v-for="(element,index) of meisai" key="index" >
+                <td>{{element.day}}</td>
+                <td>{{element.week}}</td>
+                <td v-if="element.show">{{element.work}}</td>
+                <td v-if="!element.show">
+                 <select v-model="element.editwork">
                       <option value=〇>〇</option>
                       <option value=〇/当>〇/当</option>
                       <option value=A/公>A/公</option>
@@ -68,9 +31,77 @@
                       <option value=有給>有給</option>
                       <option value=振休>振休</option>
                     </select>
-                    <input type="time" v-model="element.editstarttime">
-                    <input type="time" v-model="element.editendtime">
-                    <select v-model="element.editovertime">
+                </td>
+                <td v-if="element.show">{{element.starttime}}</td>
+                <td v-if="!element.show">
+                  <select v-model="element.editstarttime">
+                      <option value=08:15>08:15</option>
+                      <option value=08:45>08:45</option>
+                      <option value=09:15>09:15</option>
+                      <option value=09:45>09:45</option>
+                      <option value=10:15>10:15</option>
+                      <option value=10:45>10:45</option>
+                      <option value=11:15>11:15</option>
+                      <option value=11:45>11:45</option>
+                      <option value=12:15>12:15</option>
+                      <option value=12:45>12:45</option>
+                      <option value=13:15>13:15</option>
+                      <option value=13:45>13:45</option>
+                      <option value=14:15>14:15</option>
+                      <option value=14:45>14:45</option>
+                      <option value=15:15>15:15</option>
+                      <option value=15:45>15:45</option>
+                      <option value=16:15>16:15</option>
+                      <option value=16:45>16:45</option>
+                      <option value=17:00>17:00</option>
+                      <option value=17:15>17:15</option>
+                      <option value=17:45>17:45</option>
+                      <option value=20:00>20:00</option>
+                      <option value=21:00>21:00</option>
+                      <option value=22:00>22:00</option>
+                      <option value=23:00>23:00</option>
+                    </select>
+                </td>
+                <td v-if="element.show">{{element.endtime}}</td>
+                <td v-if="!element.show">
+                <select v-model="element.editendtime">
+                      <option value=06:15>06:15</option>
+
+                      <option value=06:30>06:30</option>
+                      <option value=06:30>06:45</option>
+                      <option value=07:00>07:00</option>
+                      <option value=08:15>08:15</option>
+                      <option value=08:30>08:30</option>
+                      <option value=08:45>08:45</option>
+                      <option value=09:15>09:15</option>
+                      <option value=09:45>09:45</option>
+                      <option value=10:15>10:15</option>
+                      <option value=10:45>10:45</option>
+                      <option value=11:15>11:15</option>
+                      <option value=11:45>11:45</option>
+                      <option value=12:15>12:15</option>
+                      <option value=12:45>12:45</option>
+                      <option value=13:15>13:15</option>
+                      <option value=13:45>13:45</option>
+                      <option value=14:15>14:15</option>
+                      <option value=14:45>14:45</option>
+                      <option value=15:15>15:15</option>
+                      <option value=15:45>15:45</option>
+                      <option value=16:15>16:15</option>
+                      <option value=16:45>16:45</option>
+                      <option value=17:00>17:00</option>
+                      <option value=17:15>17:15</option>
+                      <option value=17:45>17:45</option>
+                      <option value=20:00>20:00</option>
+                      <option value=21:00>21:00</option>
+                      <option value=22:00>22:00</option>
+                      <option value=23:00>23:00</option>
+                    </select>
+                
+                </td>
+                <td v-if="element.show">{{element.overtime}}</td>
+                <td v-if="!element.show">
+                  <select v-model="element.editovertime">
                       <option value=0>0</option>
                       <option value=0.5>0.5</option>
                       <option value=1.0>1.0</option>
@@ -81,9 +112,28 @@
                       <option value=3.5>3.5</option>
                       <option value=4.0>4.0</option>
                     </select>
-                    <input v-model="element.editReason">
-                     <button v-on:click="confirm(element)" >確定</button>
-                     <button v-on:click="cancel(element)" >キャンセル</button>
+                </td>
+
+                <td v-if="element.show">{{element.Reason}}</td>
+                <td v-if="!element.show">
+                 <input v-model="element.editReason">
+                </td>
+
+
+                <td v-if="element.show"><button v-on:click="edit(element)" >編集</button>
+                </td>
+                <td v-if="element.show"><button v-on:click="deleate(element)" >削除</button>
+                </td>
+                <td v-if="!element.show">
+                <button v-on:click="confirm(element)" >確定</button>
+                </td>
+                <td v-if="!element.show">
+                <button v-on:click="cancel(element)" >キャンセル</button>
+                </td>
+
+                  <div v-if="element.show">
+                  </div>
+                  <div >
                   </div>
 　　         </tr>
          </table>
@@ -98,18 +148,13 @@ export default {
     return {
 
         current:0,
-        input_date:null,
-        input_work:null,
-        input_starttime:"08:15",
-        input_endtime:"16:45",
-        input_overtime:0,
-        input_Reason:null,
-
-        meisaiList:[
-            {date:"1日",work:"",starttime:"8:15",endtime:"17:45",overtime:"0.5",Reason:"電子カルテ対応",editdate:"",editwork:"",editstarttime:"",editendtime:"",editovertime:"",editReason:"",show:true},
-            {date:"2日",work:"",starttime:"8:15",endtime:"17:45",overtime:"0.5",Reason:"電子カルテ対応",editdate:"",editwork:"",editstarttime:"",editendtime:"",editovertime:"",editReason:"",show:true}
-        ]
-        
+        meisaiList:null,
+        //勤務日数の合計
+        totalwork:0,
+        //残業時間の合計
+        totalovertime:0,
+        //当直の合計
+        totalondutywork:0
     }
   },
 
@@ -132,29 +177,14 @@ export default {
     goPrevMonth() {
       this.current--
     },
-
-    //「追加」ボタンを押した時に勤務明細を追加する。
-　　/*「追加」ボタンを押した時にinput_date,input_starttime,input_endtime,input_overtime,input_Reasonのいずれかが
-       Nullの場合は「未入力の項目があります。」と警告を表示して勤務明細を追加しない。
-    */
-    //「追加」ボタンを押した時にstarttimeがendtimeより遅い時間の場合は「時刻が不正です。」と警告を表示する。
-    //「追加」ボタンを押した時にinput_dateの日付が、すでにmeisaiListにあって重複する場合は警告を表示して勤務明細を追加しない。
-    join: function(){this.meisaiList.push({
-       date: this.input_date,
-       work: this.input_work,
-       starttime:this.input_starttime,
-       endtime:this.input_endtime,
-       overtime:this.input_overtime,
-       Reason:this.input_Reason,
-       show:true,
-       })
-       this.input_Reason = null
-    
+    //対象月を次月にする処理。
+    goNextMonth() {
+      this.current++
     },
 
     //「編集」ボタンを押した時に明細を編集する。
     edit: function (selectedelement) {
-        selectedelement.editdate=selectedelement.date
+      
         selectedelement.editwork=selectedelement.work
         selectedelement.editstarttime=selectedelement.starttime
         selectedelement.editendtime=selectedelement.endtime
@@ -166,17 +196,21 @@ export default {
     //「確定」ボタンを押した時に編集明細を確定する。
     //「確定」ボタンを押した時にstarttimeがendtimeより遅い時間の場合は「時刻が不正です。」と警告を表示する。
     confirm: function (selectedelement) {
-        selectedelement.date=selectedelement.editdate
         selectedelement.work=selectedelement.editwork
-        selectedelement.starttime=selectedelement.editstarttime
-        selectedelement.endtime=selectedelement.editendtime
-        selectedelement.overtime=selectedelement.editovertime
-        selectedelement.Reason=selectedelement.editReason
-        selectedelement.show=true
+
+        if(selectedelement.editstarttime>=selectedelement.editendtime){
+           alert("時刻が不正です。");
+        }　else {
+           selectedelement.starttime=selectedelement.editstarttime
+           selectedelement.endtime=selectedelement.editendtime
+        }
+           selectedelement.overtime=selectedelement.editovertime
+           selectedelement.Reason=selectedelement.editReason
+           selectedelement.show=true
+           console.log(this.meisaiList)
       },
     //「キャンセル」ボタンを押した時に明細の編集をキャンセルする。
     cancel: function (selectedelement) {
-        selectedelement.editdate=""
         selectedelement.editwork=""
         selectedelement.editstarttime=""
         selectedelement.editendtime=""
@@ -185,11 +219,16 @@ export default {
         selectedelement.show=true
       },
 
-    //「削除」ボタンを押した時に明細を削除する。
-    deleate: function (index) {
-        this.meisaiList.splice(index,1)
-      }
- },
+    //「削除」ボタンを押した時に日付と曜日以外の列の値を空データにする。
+    deleate: function (element) {
+        element.work =""
+        element.starttime =""
+        element.endtime =""
+        element.overtime =""
+        element.Reason =""
+      },
+     
+  },
 
 　
   computed: {
@@ -218,55 +257,87 @@ export default {
 　　 calendarFirstdayWeek() {
       // この月の1日の曜日（0~6の数値で取得）(ex:月曜日であれば1を取得)
        const firstWeekDay = this.currentMoment.startOf('month').weekday()
+       console.log(firstWeekDay)
        return firstWeekDay
      },
 
-     //今月の曜日の配列を作成。ex)2021年11月なら30日分の配列。
-     calendarWeek() {
-       let japanWeek = ["(日)","(月)","(火)","(水)","(木)","(金)","(土)"]
-       let week = []
+     //今月のカレンダーのオブジェクトを作成。ex)2021年11月なら30日分のオブジェクト。
+     calendarDay() {
 
-　　　　//i<7:土曜日まで処理を繰り返す。
-       for(let i = this.calendarFirstdayWeek; i<7;i++){
-         //土曜日：i==6まで処理を繰り返した時は、iから6を引き、日曜日に戻る。
-         if(i == 6){
-            week.push(japanWeek[i])
-            i = i-6
-          } 
-          　//week配列の要素数が今月の日数以上になった場合は処理を止める。
-            if(week.length>=this.calendarData){
-              break
-             }  
-             　//week配列の要素数が今月の日数以下の場合は、week配列にjapanWeek配列からiのインデックス番号の要素を追加する。
-               else {
-                  week.push(japanWeek[i])
-             }
+       let Calendar = {};
+       let CalendarArray = [];
+       
+       //今月の最初の日の曜日をFirstdayWeekに代入　ex)2021年12月の場合は、1日は水曜日となる為、3を代入。
+       let FirstdayWeek = this.calendarFirstdayWeek
+　　　　//曜日の値を日～月に変換する為の配列を用意する。
+       const japanWeek = ["(日)","(月)","(火)","(水)","(木)","(金)","(土)"]
+
+       for(let i = 1; i<=this.calendarData; i++){
+
+         Calendar.day = i;
+         Calendar.week = japanWeek[FirstdayWeek];
+         Calendar.work = "";
+         Calendar.starttime = "";
+         Calendar.endtime = "";
+         Calendar.overtime = "";
+         Calendar.Reason = "";
+         Calendar.editwork = "";
+         Calendar.editstarttime = "";
+         Calendar.editendtime = "";
+         Calendar.editovertime = "";
+         Calendar.editReason = "";
+         Calendar.show = true;
+
+         CalendarArray.push({...Calendar});
+          if(FirstdayWeek==6){
+           FirstdayWeek = FirstdayWeek-6;
+          }
+          else {
+           FirstdayWeek = FirstdayWeek+1;
          }
-         console.log(week)
-         return week
-      }
+       }
+       return CalendarArray
+     },
 
+     meisai() {
+       this.meisaiList = this.calendarDay;
+       console.log(this.meisaiList)
+       return this.meisaiList;
+     },
 
+     //合計勤務日数を計算する。
 
+    //  totalWorkday:function(){
+    //     for(let i=0; i<this.calendarData; i++){
+    //          if(this.meisaiList[i].work=="〇" || this.meisaiList[i].work=="〇/当")
+    //          {
+    //            this.totalwork =this.totalwork+1
+    //         } else if(this.meisaiList[i].work=="A/公" || this.meisaiList[i].work=="公/A")
+    //          {
+    //            this.totalwork =this.totalwork+0.5
+    //        }  else {
+    //           this.totalwork = this.totalwork
+    //        }
+    //     }
+    //     console.log(this.totalwork)
+    //   }
 
+     //  totalWorkday:function(){
+    //    let meisai = this.meisaiList
+    //    let workmeisai = meisai.filter(value =>{
+    //      if(value.work =="〇"){
+    //        return true;
+    //      }
+    //    })
+    //    console.log(workmeisai)
+    //  }
 
-
-　　
-//     calendarData(){
-//       // この月に何日まであるかを算出(ex:2021年11月であれば30をnumOfMonthに代入)
-//       const numOfMonth = this.currentMoment.endOf('month').date()
-//       console.log(numOfMonth)
-//       // この月の1日〜最終日までの配列を作成。配列の中身の要素に順番で1を足す。
-//       const daysOfMonth = [...Array(numOfMonth).keys()].map(i => ++i)
-//       console.log(daysOfMonth)
-//       // この月の1日の曜日（0~6の数値で取得）(ex:月曜日であれば1を取得)
-//       const firstWeekDay = this.currentMoment.startOf('month').weekday()
-// 　　　 console.log(firstWeekDay)
-
-
-    }
+   }
 
  }
+
+
+ 
 
 
 </script>
