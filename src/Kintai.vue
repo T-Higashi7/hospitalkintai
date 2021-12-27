@@ -7,7 +7,7 @@
      <button @click="totalWorkday">検証用</button>
   </p>
   <div class = total> 
-  <p>合計勤務日数：{{ this.totalwork }}日</p>
+  <p>合計勤務日数：{{ totalwork }}日</p>
   <p>合計残業時間：{{ totalovertime }}時間</p>
   </div>
       <div class="container mt-3">
