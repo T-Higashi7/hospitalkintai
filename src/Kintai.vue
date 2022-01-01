@@ -7,8 +7,9 @@
      <button @click="totalWorkday">検証用</button>
   </p>
   <div class = total> 
-  <p>合計勤務日数：{{ totalwork }}日</p>
-  <p>合計残業時間：{{ totalovertime }}時間</p>
+  <p>合計勤務日数：{{ totalWork }}日</p>
+  <p>合計従業時間：{{ totaltime }}時間</p>
+  <p>合計残業時間：{{ totalovertime }}時間　(内　22時以降の残業時間：{{totalnightovertime}}時間　　法定休日の残業時間：{{holidayovertime}}時間)</p>
   </div>
       <div class="container mt-3">
 
@@ -18,7 +19,7 @@
              </tr>
              <tr v-for="(element,index) of meisai" key="index" >
                 <td>{{element.day}}</td>
-                <td>{{element.week}}</td>
+                <td v-bind:class="{blue: isSaturday }">{{element.week}}</td>
                 <td v-if="element.show">{{element.work}}</td>
                 <td v-if="!element.show">
                  <select v-model="element.editwork">
@@ -122,10 +123,10 @@
 
                 <td v-if="element.show"><button v-on:click="edit(element)" >編集</button>
                 </td>
-                <td v-if="element.show"><button v-on:click="deleate(element)" >削除</button>
+                <td v-if="element.show"><button v-on:click="deleate(element);totalWorkday()" >削除</button>
                 </td>
                 <td v-if="!element.show">
-                <button v-on:click="confirm(element)" >確定</button>
+                <button v-on:click="confirm(element);totalWorkday()" >確定</button>
                 </td>
                 <td v-if="!element.show">
                 <button v-on:click="cancel(element)" >キャンセル</button>
@@ -143,186 +144,202 @@
 
 <script>
 export default {
-
-  data () {
+  data() {
     return {
-
-        current:0,
-        meisaiList:null,
-        //勤務日数の合計
-        totalwork:0,
-        //残業時間の合計
-        totalovertime:0,
-        //当直の合計
-        totalondutywork:0
-    }
+      current: 0,
+      meisaiList: null,
+      //勤務日数の合計
+      totalWork: 0,
+      //従業時間の合計
+      totaltime: 0,
+      //残業時間の合計
+      totalovertime: 0,
+      //22時以降の残業時間の合計
+      totalnightovertime: 0,
+      //法定休日の残業時間の合計
+      holidayovertime: 0,
+      //当直の合計
+      totalondutywork: 0,
+      //土曜日の文字色
+      isSaturday:false,
+      //日曜日の文字色
+      isSunday:false
+    };
   },
 
-
-  created:function() {
+  created: function () {
     //入力日付の初期値として今日の日付を設定する。
-    this.input_date =this.formatDate(new Date());
+    this.input_date = this.formatDate(new Date());
   },
 
   methods: {
     //日付をYYYY-MM-DDにの形に整形する。
-    formatDate:function(dt) {
-      const y =dt.getFullYear();
-      const m =("00" + (dt.getMonth()+1)) .slice(-2);
-      const d = ("00" + dt.getDate()) .slice(-2);
-      const result =y + "-" + m + "-" + d;
+    formatDate: function (dt) {
+      const y = dt.getFullYear();
+      const m = ("00" + (dt.getMonth() + 1)).slice(-2);
+      const d = ("00" + dt.getDate()).slice(-2);
+      const result = y + "-" + m + "-" + d;
       return result;
     },
     //対象月を前月にする処理。
     goPrevMonth() {
-      this.current--
+      this.current--;
     },
     //対象月を次月にする処理。
     goNextMonth() {
-      this.current++
+      this.current++;
     },
 
     //「編集」ボタンを押した時に明細を編集する。
     edit: function (selectedelement) {
-      
-        selectedelement.editwork=selectedelement.work
-        selectedelement.editstarttime=selectedelement.starttime
-        selectedelement.editendtime=selectedelement.endtime
-        selectedelement.editovertime=selectedelement.overtime
-        selectedelement.editReason=selectedelement.Reason
-        selectedelement.show=false
-  
-      },
+      selectedelement.editwork = selectedelement.work;
+      selectedelement.editstarttime = selectedelement.starttime;
+      selectedelement.editendtime = selectedelement.endtime;
+      selectedelement.editovertime = selectedelement.overtime;
+      selectedelement.editReason = selectedelement.Reason;
+      selectedelement.show = false;
+    },
     //「確定」ボタンを押した時に編集明細を確定する。
     //「確定」ボタンを押した時にstarttimeがendtimeより遅い時間の場合は「時刻が不正です。」と警告を表示する。
     confirm: function (selectedelement) {
-        selectedelement.work=selectedelement.editwork
+      selectedelement.work = selectedelement.editwork;
 
-        if(selectedelement.editstarttime>=selectedelement.editendtime){
-           alert("時刻が不正です。");
-        }　else {
-           selectedelement.starttime=selectedelement.editstarttime
-           selectedelement.endtime=selectedelement.editendtime
-        }
-           selectedelement.overtime=selectedelement.editovertime
-           selectedelement.Reason=selectedelement.editReason
-           selectedelement.show=true
-           console.log(this.meisaiList)
-      },
+      if (selectedelement.editstarttime >= selectedelement.editendtime) {
+        alert("時刻が不正です。");
+      } else {
+        selectedelement.starttime = selectedelement.editstarttime;
+        selectedelement.endtime = selectedelement.editendtime;
+      }
+      selectedelement.overtime = selectedelement.editovertime;
+      selectedelement.Reason = selectedelement.editReason;
+      selectedelement.show = true;
+      console.log(this.meisaiList);
+    },
     //「キャンセル」ボタンを押した時に明細の編集をキャンセルする。
     cancel: function (selectedelement) {
-        selectedelement.editwork=""
-        selectedelement.editstarttime=""
-        selectedelement.editendtime=""
-        selectedelement.editovertime=""
-        selectedelement.editReason=""
-        selectedelement.show=true
-      },
+      selectedelement.editwork = "";
+      selectedelement.editstarttime = "";
+      selectedelement.editendtime = "";
+      selectedelement.editovertime = "";
+      selectedelement.editReason = "";
+      selectedelement.show = true;
+    },
 
     //「削除」ボタンを押した時に日付と曜日以外の列の値を空データにする。
     deleate: function (element) {
-        element.work =""
-        element.starttime =""
-        element.endtime =""
-        element.overtime =""
-        element.Reason =""
-      },
-     
+      element.work = "";
+      element.starttime = "";
+      element.endtime = "";
+      element.overtime = "";
+      element.Reason = "";
+    },
   },
 
-　
   computed: {
-
     //対象月を作成する。
     currentMoment() {
       //現在の日時からcurrentプロパティをの数値分の月数を足す。
-      return moment().add(this.current, 'months')
+      return moment().add(this.current, "months");
     },
     subject_month() {
       //現在の日時のフォーマットを"YYYY年MM"月の形式に変換する。
-      return this.currentMoment.format('YYYY年MM月')
+      return this.currentMoment.format("YYYY年MM月");
     },
 
     //今月の日数を取得　ex)2021年11月30なら30を返す。
     calendarData() {
-       const numOfMonth = this.currentMoment.endOf('month').date()
-        console.log(numOfMonth)
-        //const daysOfMonth = [...Array(numOfMonth).keys()].map(i => ++i)
-        //console.log(daysOfMonth)
-       return numOfMonth
-         
-    },
-     
-　　//今月の最初の日の曜日を取得。
-　　 calendarFirstdayWeek() {
+      const numOfMonth = this.currentMoment.endOf("month").date();
+      console.log(numOfMonth);
+      //const daysOfMonth = [...Array(numOfMonth).keys()].map(i => ++i)
+      //console.log(daysOfMonth)
+      return numOfMonth;
+    }, //今月の最初の日の曜日を取得。
+
+    calendarFirstdayWeek() {
       // この月の1日の曜日（0~6の数値で取得）(ex:月曜日であれば1を取得)
-       const firstWeekDay = this.currentMoment.startOf('month').weekday()
-       console.log(firstWeekDay)
-       return firstWeekDay
-     },
+      const firstWeekDay = this.currentMoment.startOf("month").weekday();
+      console.log(firstWeekDay);
+      return firstWeekDay;
+    },
 
-     //今月のカレンダーのオブジェクトを作成。ex)2021年11月なら30日分のオブジェクト。
-     calendarDay() {
+    //今月のカレンダーのオブジェクトを作成。ex)2021年11月なら30日分のオブジェクト。
+    calendarDay() {
+      let Calendar = {};
+      let CalendarArray = [];
 
-       let Calendar = {};
-       let CalendarArray = [];
-       
-       //今月の最初の日の曜日をFirstdayWeekに代入　ex)2021年12月の場合は、1日は水曜日となる為、3を代入。
-       let FirstdayWeek = this.calendarFirstdayWeek
-　　　　//曜日の値を日～月に変換する為の配列を用意する。
-       const japanWeek = ["(日)","(月)","(火)","(水)","(木)","(金)","(土)"]
+      //今月の最初の日の曜日をFirstdayWeekに代入　ex)2021年12月の場合は、1日は水曜日となる為、3を代入。
+      //土曜日の場合はisSaturdayをtrueにする。
+      //日曜日の場合はisSundayをtrueにする。
+      let FirstdayWeek = this.calendarFirstdayWeek; //曜日の値を日～月に変換する為の配列を用意する。
+      const japanWeek = [
+        "(日)",
+        "(月)",
+        "(火)",
+        "(水)",
+        "(木)",
+        "(金)",
+        "(土)",
+      ];
 
-       for(let i = 1; i<=this.calendarData; i++){
+      for (let i = 1; i <= this.calendarData; i++) {
+        Calendar.day = i;
+        Calendar.week = japanWeek[FirstdayWeek];
+        console.log(Calendar.week)
+        if(Calendar.week=="(土)"){
+          this.isSaturday = true;
+        } 
+        Calendar.work = "";
+        Calendar.starttime = "";
+        Calendar.endtime = "";
+        Calendar.overtime = "";
+        Calendar.Reason = "";
+        Calendar.editwork = "";
+        Calendar.editstarttime = "";
+        Calendar.editendtime = "";
+        Calendar.editovertime = "";
+        Calendar.editReason = "";
+        Calendar.show = true;
 
-         Calendar.day = i;
-         Calendar.week = japanWeek[FirstdayWeek];
-         Calendar.work = "";
-         Calendar.starttime = "";
-         Calendar.endtime = "";
-         Calendar.overtime = "";
-         Calendar.Reason = "";
-         Calendar.editwork = "";
-         Calendar.editstarttime = "";
-         Calendar.editendtime = "";
-         Calendar.editovertime = "";
-         Calendar.editReason = "";
-         Calendar.show = true;
+        CalendarArray.push({ ...Calendar });
+        if (FirstdayWeek == 6) {
+          // this.isSaturday = false;
+          // console.log(this.isSaturday)
+          FirstdayWeek = FirstdayWeek - 6;
+        } else {
+          // this.isSaturday = false;
+          // console.log(this.isSaturday)
+          FirstdayWeek = FirstdayWeek + 1;
+        }
+      }
+      return CalendarArray;
+    },
 
-         CalendarArray.push({...Calendar});
-          if(FirstdayWeek==6){
-           FirstdayWeek = FirstdayWeek-6;
-          }
-          else {
-           FirstdayWeek = FirstdayWeek+1;
-         }
-       }
-       return CalendarArray
-     },
+    meisai() {
+      this.meisaiList = this.calendarDay;
+      console.log(this.meisaiList);
+      return this.meisaiList;
+    },
 
-     meisai() {
-       this.meisaiList = this.calendarDay;
-       console.log(this.meisaiList)
-       return this.meisaiList;
-     },
-
-     //合計勤務日数を計算する。
+    //合計勤務日数を計算する。
+    totalWorkday: function () {
+      this.totalWork = 0;
+      for (let i = 0; i < this.calendarData; i++) {
+        if (
+          this.meisaiList[i].work == "〇" ||
+          this.meisaiList[i].work == "〇/当"
+        ) {
+          this.totalWork = this.totalWork + 1;
+        } else if (
+          this.meisaiList[i].work == "A/公" ||
+          this.meisaiList[i].work == "公/A"
+        ) {
+          this.totalWork = this.totalWork + 0.5;
+        }
+      }
+      console.log(this.totalWork);
+    },
 
     //  totalWorkday:function(){
-    //     for(let i=0; i<this.calendarData; i++){
-    //          if(this.meisaiList[i].work=="〇" || this.meisaiList[i].work=="〇/当")
-    //          {
-    //            this.totalwork =this.totalwork+1
-    //         } else if(this.meisaiList[i].work=="A/公" || this.meisaiList[i].work=="公/A")
-    //          {
-    //            this.totalwork =this.totalwork+0.5
-    //        }  else {
-    //           this.totalwork = this.totalwork
-    //        }
-    //     }
-    //     console.log(this.totalwork)
-    //   }
-
-     //  totalWorkday:function(){
     //    let meisai = this.meisaiList
     //    let workmeisai = meisai.filter(value =>{
     //      if(value.work =="〇"){
@@ -331,19 +348,11 @@ export default {
     //    })
     //    console.log(workmeisai)
     //  }
-
-   }
-
- }
-
-
- 
-
-
+  },
+};
 </script>
 
 <style>
-
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -353,14 +362,19 @@ export default {
   margin-top: 60px;
 }
 
-td, th{
-    border: 1px solid black;
+.red {
+  color:#ff0000;
+}
+.blue {
+  color:#0000FF;
 }
 
-
-th{
-  background-color: #EEFFFF;
+td,
+th {
+  border: 1px solid black;
 }
 
-
+th {
+  background-color: #eeffff;
+}
 </style>
