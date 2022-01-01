@@ -284,10 +284,13 @@ export default {
       for (let i = 1; i <= this.calendarData; i++) {
         Calendar.day = i;
         Calendar.week = japanWeek[FirstdayWeek];
-        console.log(Calendar.week)
         if(Calendar.week=="(土)"){
           this.isSaturday = true;
-        } 
+          console.log(this.isSaturday)
+        } else {
+          this.isSaturday = false;
+          console.log(this.isSaturday)
+        }
         Calendar.work = "";
         Calendar.starttime = "";
         Calendar.endtime = "";
