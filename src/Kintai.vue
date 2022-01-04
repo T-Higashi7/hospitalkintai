@@ -8,7 +8,7 @@
   </p>
   <div class = total> 
   <p>合計勤務日数：{{ totalWork }}日</p>
-  <p>合計従業時間：{{ totaltime }}時間</p>
+  <p>合計従業時間：{{ totaltime }}分</p>
   <p>合計残業時間：{{ totalovertime }}時間　(内　22時以降の残業時間：{{totalnightovertime}}時間　　法定休日の残業時間：{{holidayovertime}}時間)</p>
   </div>
       <div class="container mt-3">
@@ -19,7 +19,7 @@
              </tr>
              <tr v-for="(element,index) of meisai" key="index" >
                 <td>{{element.day}}</td>
-                <td v-bind:class="{blue: isSaturday }">{{element.week}}</td>
+                <td v-bind:class="{blue: element.isSaturday, red: element.isSunday }">{{element.week}}</td>
                 <td v-if="element.show">{{element.work}}</td>
                 <td v-if="!element.show">
                  <select v-model="element.editwork">
@@ -67,7 +67,6 @@
                 <td v-if="!element.show">
                 <select v-model="element.editendtime">
                       <option value=06:15>06:15</option>
-
                       <option value=06:30>06:30</option>
                       <option value=06:30>06:45</option>
                       <option value=07:00>07:00</option>
@@ -160,10 +159,6 @@ export default {
       holidayovertime: 0,
       //当直の合計
       totalondutywork: 0,
-      //土曜日の文字色
-      isSaturday:false,
-      //日曜日の文字色
-      isSunday:false
     };
   },
 
@@ -193,6 +188,7 @@ export default {
     //「編集」ボタンを押した時に明細を編集する。
     edit: function (selectedelement) {
       selectedelement.editwork = selectedelement.work;
+      console.log(selectedelement.editwork)
       selectedelement.editstarttime = selectedelement.starttime;
       selectedelement.editendtime = selectedelement.endtime;
       selectedelement.editovertime = selectedelement.overtime;
@@ -203,12 +199,24 @@ export default {
     //「確定」ボタンを押した時にstarttimeがendtimeより遅い時間の場合は「時刻が不正です。」と警告を表示する。
     confirm: function (selectedelement) {
       selectedelement.work = selectedelement.editwork;
+      console.log(selectedelement.work)
 
       if (selectedelement.editstarttime >= selectedelement.editendtime) {
         alert("時刻が不正です。");
       } else {
         selectedelement.starttime = selectedelement.editstarttime;
+        // //selectedelement.starttimeを分単位に変換する
+        // let start = selectedelement.starttime.split(":")
+        // let starttimeminute = Number((start[0]*60)) + Number(start[1])
+        // console.log(starttimeminute)
         selectedelement.endtime = selectedelement.editendtime;
+        //selectedelement.endtimeを分単位に変換する
+        // let end = selectedelement.endtime.split(":")
+        // let endtimeminute = Number((end[0]*60))+Number(end[1])
+        // console.log(endtimeminute)
+        // this.totaltime = endtimeminute-starttimeminute
+        // console.log(this.totaltime)
+
       }
       selectedelement.overtime = selectedelement.editovertime;
       selectedelement.Reason = selectedelement.editReason;
@@ -218,6 +226,7 @@ export default {
     //「キャンセル」ボタンを押した時に明細の編集をキャンセルする。
     cancel: function (selectedelement) {
       selectedelement.editwork = "";
+      console.log(selectedelement.editwork)
       selectedelement.editstarttime = "";
       selectedelement.editendtime = "";
       selectedelement.editovertime = "";
@@ -284,12 +293,15 @@ export default {
       for (let i = 1; i <= this.calendarData; i++) {
         Calendar.day = i;
         Calendar.week = japanWeek[FirstdayWeek];
-        if(Calendar.week=="(土)"){
-          this.isSaturday = true;
-          console.log(this.isSaturday)
+        if (Calendar.week == "(土)") {
+          Calendar.isSunday = false;
+          Calendar.isSaturday = true;
+        } else if (Calendar.week == "(日)") {
+          Calendar.isSaturday = false;
+          Calendar.isSunday = true;
         } else {
-          this.isSaturday = false;
-          console.log(this.isSaturday)
+          Calendar.isSaturday = false;
+          Calendar.isSunday = false;
         }
         Calendar.work = "";
         Calendar.starttime = "";
@@ -305,12 +317,8 @@ export default {
 
         CalendarArray.push({ ...Calendar });
         if (FirstdayWeek == 6) {
-          // this.isSaturday = false;
-          // console.log(this.isSaturday)
           FirstdayWeek = FirstdayWeek - 6;
         } else {
-          // this.isSaturday = false;
-          // console.log(this.isSaturday)
           FirstdayWeek = FirstdayWeek + 1;
         }
       }
@@ -324,7 +332,7 @@ export default {
     },
 
     //合計勤務日数を計算する。
-    totalWorkday: function () {
+    totalWorkday () {
       this.totalWork = 0;
       for (let i = 0; i < this.calendarData; i++) {
         if (
@@ -341,6 +349,9 @@ export default {
       }
       console.log(this.totalWork);
     },
+
+    //総従業時間を計算する。
+
 
     //  totalWorkday:function(){
     //    let meisai = this.meisaiList
@@ -366,10 +377,10 @@ export default {
 }
 
 .red {
-  color:#ff0000;
+  color: #ff0000;
 }
 .blue {
-  color:#0000FF;
+  color: #0000ff;
 }
 
 td,
