@@ -4,7 +4,7 @@
 　<p>勤怠表入力<br>({{ subject_month }})
      <button @click="goPrevMonth">前月</button>
      <button @click="goNextMonth">次月</button>
-     <button @click="totalWorkday">検証用</button>
+     <button @click="totalWorktime">検証用</button>
   </p>
   <div class = total> 
   <p>合計勤務日数：{{ totalWork }}日</p>
@@ -125,7 +125,7 @@
                 <td v-if="element.show"><button v-on:click="deleate(element);totalWorkday()" >削除</button>
                 </td>
                 <td v-if="!element.show">
-                <button v-on:click="confirm(element);totalWorkday()" >確定</button>
+                <button v-on:click="confirm(element);totalWorkday();totalWorktime()" >確定</button>
                 </td>
                 <td v-if="!element.show">
                 <button v-on:click="cancel(element)" >キャンセル</button>
@@ -188,7 +188,6 @@ export default {
     //「編集」ボタンを押した時に明細を編集する。
     edit: function (selectedelement) {
       selectedelement.editwork = selectedelement.work;
-      console.log(selectedelement.editwork)
       selectedelement.editstarttime = selectedelement.starttime;
       selectedelement.editendtime = selectedelement.endtime;
       selectedelement.editovertime = selectedelement.overtime;
@@ -351,6 +350,22 @@ export default {
     },
 
     //総従業時間を計算する。
+    totalWorktime(){
+      for(let i = 0; i < this.calendarData; i++){
+        // //selectedelement.starttimeを分単位に変換する
+           let start = this.meisaiList[i].starttime.split(":")
+           console.log(start[0])
+           let starttimeminute = Number((start[0]*60)) + Number(start[1])
+           console.log(starttimeminute)
+        //selectedelement.endtimeを分単位に変換する
+           let end = this.meisaiList[i].endtime.split(":")
+           let endtimeminute = Number((end[0]*60))+Number(end[1])
+           console.log(endtimeminute)
+           this.totaltime = this.totaltime+(endtimeminute-starttimeminute)
+           console.log(this.totaltime)
+          
+      }
+    }
 
 
     //  totalWorkday:function(){
