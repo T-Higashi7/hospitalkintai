@@ -4,7 +4,7 @@
 　<p>勤怠表入力<br>({{ subject_month }})
      <button @click="goPrevMonth">前月</button>
      <button @click="goNextMonth">次月</button>
-     <button @click="totalWorktime">検証用</button>
+     <button @click="totalWorktime()">検証用</button>
   </p>
   <div class = total> 
   <p>合計勤務日数：{{ totalWork }}日</p>
@@ -125,7 +125,7 @@
                 <td v-if="element.show"><button v-on:click="deleate(element);totalWorkday()" >削除</button>
                 </td>
                 <td v-if="!element.show">
-                <button v-on:click="confirm(element);totalWorkday();totalWorktime()" >確定</button>
+                <button v-on:click="confirm(element);total()" >確定</button>
                 </td>
                 <td v-if="!element.show">
                 <button v-on:click="cancel(element)" >キャンセル</button>
@@ -198,34 +198,24 @@ export default {
     //「確定」ボタンを押した時にstarttimeがendtimeより遅い時間の場合は「時刻が不正です。」と警告を表示する。
     confirm: function (selectedelement) {
       selectedelement.work = selectedelement.editwork;
-      console.log(selectedelement.work)
+      console.log(selectedelement.work);
 
       if (selectedelement.editstarttime >= selectedelement.editendtime) {
         alert("時刻が不正です。");
       } else {
         selectedelement.starttime = selectedelement.editstarttime;
-        // //selectedelement.starttimeを分単位に変換する
-        // let start = selectedelement.starttime.split(":")
-        // let starttimeminute = Number((start[0]*60)) + Number(start[1])
-        // console.log(starttimeminute)
         selectedelement.endtime = selectedelement.editendtime;
-        //selectedelement.endtimeを分単位に変換する
-        // let end = selectedelement.endtime.split(":")
-        // let endtimeminute = Number((end[0]*60))+Number(end[1])
-        // console.log(endtimeminute)
-        // this.totaltime = endtimeminute-starttimeminute
-        // console.log(this.totaltime)
-
       }
       selectedelement.overtime = selectedelement.editovertime;
       selectedelement.Reason = selectedelement.editReason;
       selectedelement.show = true;
       console.log(this.meisaiList);
+      
     },
     //「キャンセル」ボタンを押した時に明細の編集をキャンセルする。
     cancel: function (selectedelement) {
       selectedelement.editwork = "";
-      console.log(selectedelement.editwork)
+      console.log(selectedelement.editwork);
       selectedelement.editstarttime = "";
       selectedelement.editendtime = "";
       selectedelement.editovertime = "";
@@ -331,7 +321,7 @@ export default {
     },
 
     //合計勤務日数を計算する。
-    totalWorkday () {
+    totalWorkday() {
       this.totalWork = 0;
       for (let i = 0; i < this.calendarData; i++) {
         if (
@@ -350,23 +340,36 @@ export default {
     },
 
     //総従業時間を計算する。
-    totalWorktime(){
-      for(let i = 0; i < this.calendarData; i++){
-        // //selectedelement.starttimeを分単位に変換する
-           let start = this.meisaiList[i].starttime.split(":")
-           console.log(start[0])
-           let starttimeminute = Number((start[0]*60)) + Number(start[1])
-           console.log(starttimeminute)
-        //selectedelement.endtimeを分単位に変換する
-           let end = this.meisaiList[i].endtime.split(":")
-           let endtimeminute = Number((end[0]*60))+Number(end[1])
-           console.log(endtimeminute)
-           this.totaltime = this.totaltime+(endtimeminute-starttimeminute)
-           console.log(this.totaltime)
-          
+    totalWorktime() {
+      this.totaltime = 0
+      
+      for (let i = 0; i < this.calendarData; i++) {
+        if (
+          this.meisaiList[i].starttime == "" ||
+          this.meisaiList[i].endtime == ""
+        ) {
+          this.totaltime = this.totaltime + 0;
+        } else {
+          // //selectedelement.starttimeを分単位に変換する
+          const start = this.meisaiList[i].starttime.split(":");
+          console.log(start[0]);
+          let startTimeMinute = Number(start[0] * 60) + Number(start[1]);
+          console.log(startTimeMinute);
+          //selectedelement.endtimeを分単位に変換する
+          const end = this.meisaiList[i].endtime.split(":");
+          const endTimeMinute = Number(end[0] * 60) + Number(end[1]);
+          console.log(endTimeMinute);
+          this.totaltime = this.totaltime + (endTimeMinute - startTimeMinute);
+          console.log(this.totaltime);
+        }
       }
-    }
+      // return totalTime
+    },
 
+    total() {
+      this.totalWorkday()
+      this.totalWorktime()
+    }
 
     //  totalWorkday:function(){
     //    let meisai = this.meisaiList
