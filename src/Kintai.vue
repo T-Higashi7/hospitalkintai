@@ -17,11 +17,11 @@
   <p>　　当直回数：{{ totalOndutyWork }}回</p>
   <p>　　有給時間：{{ totalPaidTime }}分</p>
   </div>
-  </div>
+  </div>~
          <table class="table">
            <thead thead class="table-light">
            <tr>
-                <th>日付</th><th>曜日</th><th>勤務</th><th>勤務開始時間</th><th>勤務終了時間</th><th>従業時間</th><th>昼休憩</th><th>残業時間</th><th>22時以降の残業時間</th><th>残業理由・その他備考</th><th>有給時間</th>
+                <th>日付</th><th>曜日</th><th>勤務</th><th>勤務開始時間</th><th>勤務終了時間</th><th>従業時間</th><th>昼休憩</th><th>残業時間</th><th>22時～5時の残業</th><th>残業理由・その他備考</th><th>有給時間</th>
            </tr>
            </thead>
            <tbody>
@@ -46,96 +46,21 @@
                       <option value=欠勤>欠勤</option>
                     </select>
                 </td>
-                <td v-if="element.show">{{element.starttime}}</td>
+                <td v-if="element.show">{{searchTimeListValue(element.starttime)}}</td>
                 <td v-if="!element.show">
                   <select v-model="element.editStartTime">
-                      <option value=08:15>08:15</option>
-                      <option value=08:45>08:45</option>
-                      <option value=09:15>09:15</option>
-                      <option value=09:45>09:45</option>
-                      <option value=10:15>10:15</option>
-                      <option value=10:45>10:45</option>
-                      <option value=11:15>11:15</option>
-                      <option value=11:45>11:45</option>
-                      <option value=12:15>12:15</option>
-                      <option value=12:45>12:45</option>
-                      <option value=13:15>13:15</option>
-                      <option value=13:45>13:45</option>
-                      <option value=14:15>14:15</option>
-                      <option value=14:45>14:45</option>
-                      <option value=15:15>15:15</option>
-                      <option value=15:45>15:45</option>
-                      <option value=16:15>16:15</option>
-                      <option value=16:45>16:45</option>
-                      <option value=17:00>17:00</option>
-                      <option value=17:15>17:15</option>
-                      <option value=17:45>17:45</option>
-                      <option value=18:15>18:15</option>
-                      <option value=18:45>18:45</option>
-                      <option value=19:15>19:15</option>
-                      <option value=19:45>19:45</option>
-                      <option value=20:00>20:00</option>
-                      <option value=21:00>21:00</option>
-                      <option value=22:00>22:00</option>
-                      <option value=23:00>23:00</option>
-                      <option value=24:00>00:00</option>
-                      <option value=25:00>1:00</option>
-                      <option value=26:00>2:00</option>
-                      <option value=27:00>3:00</option>
-                      <option value=28:00>4:00</option>
-                      <option value=29:00>5:00</option>
-                      <option value=30:00>6:00</option>
-                      <option value=7:00>7:00</option>
-                      <option value=7:15>7:15</option>
-                      <option value=7:45>7:45</option>
-                    </select>
+                      <option v-for="time in timeList" :value="time.value">
+                      {{time.text}}
+                      </option>
+                  </select>
                 </td>
-                <td v-if="element.show">{{element.endtime}}</td>
+                <td v-if="element.show">{{searchTimeListValue(element.endtime)}}</td>
                 <td v-if="!element.show">
-                <select v-model="element.editEndTime">
-                      <option value=30:15>06:15</option>
-                      <option value=30:30>06:30</option>
-                      <option value=30:45>06:45</option>
-                      <option value=31:00>07:00</option>
-                      <option value=32:00>08:00</option>
-                      <option value=32:15>08:15</option>
-                      <option value=32:30>08:30</option>
-                      <option value=08:45>08:45</option>
-                      <option value=09:15>09:15</option>
-                      <option value=09:45>09:45</option>
-                      <option value=10:15>10:15</option>
-                      <option value=10:45>10:45</option>
-                      <option value=11:15>11:15</option>
-                      <option value=11:45>11:45</option>
-                      <option value=12:15>12:15</option>
-                      <option value=12:45>12:45</option>
-                      <option value=13:15>13:15</option>
-                      <option value=13:45>13:45</option>
-                      <option value=14:15>14:15</option>
-                      <option value=14:45>14:45</option>
-                      <option value=15:15>15:15</option>
-                      <option value=15:45>15:45</option>
-                      <option value=16:15>16:15</option>
-                      <option value=16:45>16:45</option>
-                      <option value=17:00>17:00</option>
-                      <option value=17:15>17:15</option>
-                      <option value=17:45>17:45</option>
-                      <option value=18:15>18:15</option>
-                      <option value=18:45>18:45</option>
-                      <option value=19:15>19:15</option>
-                      <option value=19:45>19:45</option>
-                      <option value=20:00>20:00</option>
-                      <option value=20:15>20:15</option>
-                      <option value=20:45>20:45</option>
-                      <option value=21:00>21:00</option>
-                      <option value=21:15>21:15</option>
-                      <option value=21:45>21:45</option>
-                      <option value=22:15>22:15</option>
-                      <option value=22:45>22:45</option>
-                      <option value=23:00>23:00</option>
-                      <option value=23:15>23:15</option>
-                      <option value=23:45>23:45</option>
-                    </select>
+                   <select v-model="element.editEndTime" >
+                      <option v-for="time in timeList" :value="time.value">
+                      {{time.text}}
+                      </option>
+                   </select>
                 </td>
                 <td>{{element.workTime}}</td>
                 <td>{{element.restTime}}</td>
@@ -197,6 +122,57 @@ export default {
     return {
       current: 0,
       meisaiList: null,
+      timeList:[
+        {id : 1, value:495, text: "8:15" },
+        {id : 2, value:525, text: "8:45" },
+        {id : 3, value:555, text: "9:15" },
+        {id : 4, value:585, text: "9:45" },
+        {id : 5, value:615, text: "10:15" },
+        {id : 6, value:645, text: "10:45" },
+        {id : 7, value:675, text: "11:15" },
+        {id : 8, value:705, text: "11:45" },
+        {id : 9, value:735, text: "12:15" },
+        {id : 10, value:765, text: "12:45" },
+        {id : 11, value:795, text: "13:15" },
+        {id : 12, value:825, text: "13:45" },
+        {id : 13, value:855, text: "14:15" },
+        {id : 14, value:885, text: "14:45" },
+        {id : 15, value:915, text: "15:15" },
+        {id : 16, value:945, text: "15:45" },
+        {id : 17, value:975, text: "16:15" },
+        {id : 18, value:1005, text: "16:45" },
+        {id : 19, value:1035, text: "17:15" },
+        {id : 20, value:1065, text: "17:45" },
+        {id : 21, value:1095, text: "18:15" },
+        {id : 22, value:1125, text: "18:45" },
+        {id : 23, value:1155, text: "19:15" },
+        {id : 24, value:1185, text: "19:45" },
+        {id : 25, value:1215, text: "20:15" },
+        {id : 26, value:1245, text: "20:45" },
+        {id : 27, value:1275, text: "21:15" },
+        {id : 28, value:1305, text: "21:45" },
+        {id : 29, value:1335, text: "22:15" },
+        {id : 30, value:1365, text: "22:45" },
+        {id : 31, value:1395, text: "23:15" },
+        {id : 32, value:1425, text: "23:45" },
+        {id : 33, value:1455, text: "00:15" },
+        {id : 34, value:1485, text: "00:45" },
+        {id : 35, value:1515, text: "1:15" },
+        {id : 36, value:1545, text: "1:45" },
+        {id : 37, value:1575, text: "2:15" },
+        {id : 38, value:1605, text: "2:45" },
+        {id : 39, value:1635, text: "3:15" },
+        {id : 40, value:1665, text: "3:45" },
+        {id : 41, value:1695, text: "4:15" },
+        {id : 42, value:1725, text: "4:45" },
+        {id : 43, value:1755, text: "5:15" },
+        {id : 44, value:1785, text: "5:45" },
+        {id : 45, value:1815, text: "6:15" },
+        {id : 46, value:1845, text: "6:45" },
+        {id : 47, value:1875, text: "7:15" },
+        {id : 48, value:1905, text: "7:45" },
+        {id : 49, value:1920, text: "8:00" },
+      ],
       //勤務日数の合計
       totalWork: 0,
       //従業時間の合計
@@ -412,6 +388,17 @@ export default {
             Number(this.totalPaidTime) + Number(this.meisaiList[i].paidTime);
         }
       }
+    },
+
+    //timeListの中から確定した時間と同じvalueのオブジェクトを探す。
+    searchTimeListValue:function(time){
+      const a = this.timeList.filter((ele) => {
+        return time == ele.value;
+      });
+      if(a[0]==null){
+      return "";
+      }
+      return a[0].text;
     },
 
     //それぞれの合計を算出
