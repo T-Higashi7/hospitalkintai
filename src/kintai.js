@@ -48,27 +48,35 @@ function midnightWorkTime(starttime, endtime) {
     let midnightWorkTime = 0;
     const start = starttime.split(":");
     const startTimeMinute = Number(start[0] * 60) + Number(start[1]);
+    console.log(startTimeMinute)
     const end = endtime.split(":");
     const endTimeMinute = Number(end[0] * 60) + Number(end[1]);
+    console.log(endTimeMinute)
     const totalTime = endTimeMinute - startTimeMinute;
+    console.log(totalTime)
     
     if (Number(end[0])>=22 && Number(end[0])>=29) {
         //勤務終了時間がAM5時(60*29 = 1740)を超えた時間をoverFiveとする。
         const overFive = endTimeMinute - 1740;
+        console.log(overFive)
         //勤務開始時間からAM22時(60*22 = 1320)を超えなかった時間をnotOverTenとする。
         let notOverTen = 1320 - startTimeMinute;
+        console.log(notOverTen)
         //勤務開始時間がAM22時(60*22 = 1320)を超えていた場合
         if(notOverTen < 0){
             // 従業時間から勤務終了時間がAM5時(60*29 = 1740)を超えた時間を引く。
             midnightWorkTime = totalTime - overFive;
+            console.log(midnightWorkTime)
         } else {
             // 従業時間から勤務終了時間がAM5時(60*29 = 1740)を超えた時間と勤務開始時間ががAM22時(60*22 = 1320)を超えなかった時間を引く。
             midnightWorkTime = totalTime - (overFive + notOverTen);
+            console.log(midnightWorkTime)
         }
     } else if((Number(end[0])>=22 && Number(end[0])<29)){
         //勤務開始時間からAM22時(60*22 = 1320)を超えなかった時間をnotOverTenとする。
         const notOverTen = 1320 - startTimeMinute;
         midnightWorkTime = totalTime - notOverTen;
+        console.log(midnightWorkTime)
     } else {
         //それ以外の場合は深夜従業時間は0となる。
         midnightWorkTime = 0;

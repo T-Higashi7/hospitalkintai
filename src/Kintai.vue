@@ -1,135 +1,145 @@
 
 <template>
-
 <div class="container mx-auto container-fluid " style="background-color: #FFFCFB" >
   <div style="padding: 10px; margin-bottom: 10px; border: 1px dashed #333333;">
-　<p class = "title">【勤怠表入力】</p>
-  <p>({{ subjectMonth }})
-     <button type="button" class="btn btn-primary" @click="goPrevMonth">前月</button>
-     <button type="button" class="btn btn-primary" @click="goNextMonth">次月</button>
-     <button type="button" class="btn btn-warning" @click="subMission">提出</button>
-     <!-- <button @click="totalWorktime">検証用</button>
-     <button @click="testtest">検証用2</button> -->
-  </p>
-  <div> 
-  <p>合計勤務日数：{{ totalWork }}日</p>
-  <p>合計従業時間：{{ totalTime }}時間 (内　22時～5時の従業時間：{{totalMidnightWorkTime}}時間)</p>
-  <p>合計残業時間：{{ totalOverTime }}時間 (内　22時～5時の残業時間：{{totalMidnightOverTime}}時間　　法定休日(日曜日)の残業時間：{{totalHolidayOverTime}}時間)</p>
-  <p>　　当直回数：{{ totalOndutyWork }}回</p>
-  <p>　　夜勤回数：{{ totalNightWork }}回</p>
-  <p>　　有給時間：{{ totalPaidTime }}分</p>
+    <p class = "title">【勤怠表入力】
+      提出者：<input type="text" v-model = "submitter">
+    </p>
+    <p>({{ subjectMonth }})
+      <button type="button" class="btn btn-primary" @click="goPrevMonth">前月</button>
+      <button type="button" class="btn btn-primary" @click="goNextMonth">次月</button>　
+      <button type="button" class="btn btn-warning" @click="subMission">提出</button>　
+      <button type="button" class="btn btn btn-info" @click="temporarilySaved">一時保存</button>
+      <button type="button" class="btn btn btn-info" @click="read">保存データ読み込み</button>
+      <!-- <button @click="totalWorktime">検証用</button>
+      <button @click="testtest">検証用2</button> -->
+    </p>
+    <div> 
+      <p>合計勤務日数：{{ totalWork }}日</p>
+      <p>合計従業時間：{{ totalTime }}時間 (内　22時～5時の従業時間：{{totalMidnightWorkTime}}時間)</p>
+      <p>合計残業時間：{{ totalOverTime }}時間 (内　22時～5時の残業時間：{{totalMidnightOverTime}}時間　　法定休日(日曜日)の残業時間：{{totalHolidayOverTime}}時間)</p>
+      <p>    当直回数：{{ totalOndutyWork }}回</p>
+      <p>    夜勤回数：{{ totalNightWork }}回</p>
+      <p>    有給時間：{{ totalPaidTime }}分</p>
+    </div>
   </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead thead class="table-light">
+        <tr>
+          <th scope="col" style="background-color: #EEEEEE">日付</th>
+          <th scope="col" style="background-color: #EEEEEE">曜日</th>
+          <th scope="col" style="background-color: #CCFFCC">勤務</th>
+          <th scope="col" style="background-color: #CCFFCC">勤務開始</th>
+          <th scope="col" style="background-color: #CCFFCC">勤務終了</th>
+          <th scope="col" style="background-color: #CCFFCC">従業時間</th>
+          <th scope="col" style="background-color: #CCFFCC">22時～5時の従業</th>
+          <th scope="col" style="background-color: #CCFFCC">休憩</th>
+          <th scope="col" style="background-color: #CCFFFF">残業時間</th>
+          <th scope="col" style="background-color: #CCFFFF">22時～5時の残業</th>
+          <th scope="col" style="background-color: #CCFFFF">残業理由・備考</th>
+          <th scope="col" style="background-color: #FFFF99">有給</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(element,index) of meisai" key="index" >
+          <td>{{element.day}}</td>
+          <td v-bind:class="{blue: element.isSaturday, red: element.isSunday }">{{element.week}}</td>
+          <td v-if="element.show">{{element.work}}</td>
+          <td v-if="!element.show">
+            <select v-model="element.editWork" v-on:change="selectedWork(element)">
+              <option value=〇>〇</option>
+              <option value=〇/当>〇/当</option>
+              <option value=深夜>深夜</option>
+              <option value=A/公>A/公</option>
+              <option value=公/A>公/A</option>
+              <option value=A/有>A/有</option>
+              <option value=有/A>有/A</option>
+              <option value=公/当>公/当</option>
+              <option value=公>公</option>
+              <option value=有給>有給</option>
+              <option value=時間有給>時間有給</option>
+              <option value=特休>特休</option>
+              <option value=振休>振休</option>
+              <option value=欠勤>欠勤</option>
+            </select>
+          </td>
+          <!-- 勤務開始時間は勤務が深夜でも深夜以外でも共通のシフトを使用する -->
+          <td v-if="element.show">{{searchDayShiftValue(element.starttime)}}</td>
+          <td v-if="!element.show">
+            <select v-model="element.editStartTime">
+              <option v-for="time in dayShift" :value="time.value">
+                {{time.text}}
+              </option>
+            </select>
+          </td>
+          <!-- 勤務が深夜以外の場合の勤務終了時間はdayShiftを使用 -->
+          <td v-if="element.show && !element.nightWork">{{searchDayShiftValue(element.endtime)}}</td>
+          <td v-if="!element.show && !element.nightWork">
+            <select v-model="element.editEndTime">
+              <option v-for="time in dayShift" :value="time.value">
+                {{time.text}}
+              </option>
+            </select>
+          </td>
+          <!-- 勤務が深夜の場合の勤務終了時間はnightShiftを使用 -->
+          <td v-if="element.show &&  element.nightWork">{{searchNightShiftValue(element.endtime)}}</td>
+          <td v-if="!element.show && element.nightWork">
+            <select v-model="element.editEndTime">
+              <option v-for="time in nightShift" :value="time.value">
+                {{time.text}}
+              </option>
+            </select>
+          </td>
+          <td>{{element.workTime}}</td>
+          <td>{{element.midnightWorkTime}}</td>
+          <td>{{element.restTime}}</td>
+          <td>{{element.overtime}}</td>
+          <td>{{element.midnightOvertime}}</td>
+          <td v-if="element.show">{{element.reason}}</td>
+          <td v-if="!element.show">
+            <input v-model="element.editReason">
+          </td>
+          <td v-if="element.show">{{element.paidTime}}</td>
+          <td v-if="!element.show">
+            <select v-model="element.editPaidTime">
+              <option value=30>30</option>
+              <option value=60>60</option>
+              <option value=90>90</option>
+              <option value=120>120</option>
+              <option value=150>150</option>
+              <option value=180>180</option>
+              <option value=210>210</option>
+              <option value=240>240</option>
+              <option value=270>270</option>
+              <option value=300>300</option>
+              <option value=330>330</option>
+              <option value=360>360</option>
+              <option value=390>390</option>
+              <option value=420>420</option>
+              <option value=450>450</option>
+              <option value=480>480</option>
+            </select>
+          </td>
+          <td v-if="element.show">
+            <button class="btn btn-outline-dark" v-on:click="edit(element)" >編集</button>
+          </td>
+          <td v-if="element.show">
+            <button class="btn btn-outline-dark" v-on:click="deleate(element);totalWorkday()" >削除</button>
+          </td>
+          <td v-if="!element.show">
+            <button class="btn btn-outline-dark" v-on:click="confirm(element);total()" >確定</button>
+          </td>
+          <td v-if="!element.show">
+            <button class="btn btn-outline-dark" v-on:click="cancel(element)" >キャンセル</button>
+          </td>
+          <div v-if="element.show">
+          </div>
+        </tr>
+      </tbody>
+    </table>
   </div>
-      <div class="table-responsive">
-         <table class="table">
-           <thead thead class="table-light">
-           <tr>
-                <th scope="col" style="background-color: #EEEEEE">日付</th>
-                <th scope="col" style="background-color: #EEEEEE">曜日</th>
-                <th scope="col" style="background-color: #CCFFCC">勤務</th>
-                <th scope="col" style="background-color: #CCFFCC">勤務開始</th>
-                <th scope="col" style="background-color: #CCFFCC">勤務終了</th>
-                <th scope="col" style="background-color: #CCFFCC">従業時間</th>
-                <th scope="col" style="background-color: #CCFFCC">22時～5時の従業</th>
-                <th scope="col" style="background-color: #CCFFCC">昼休憩</th>
-                <th scope="col" style="background-color: #CCFFFF">残業時間</th>
-                <th scope="col" style="background-color: #CCFFFF">22時～5時の残業</th>
-                <th scope="col" style="background-color: #CCFFFF">残業理由・備考</th>
-                <th scope="col" style="background-color: #FFFF99">有給</th>
-           </tr>
-           </thead>
-           <tbody>
-             <tr v-for="(element,index) of meisai" key="index" >
-                <td>{{element.day}}</td>
-                <td v-bind:class="{blue: element.isSaturday, red: element.isSunday }">{{element.week}}</td>
-                <td v-if="element.show">{{element.work}}</td>
-                <td v-if="!element.show">
-                 <select v-model="element.editWork">
-                      <option value=〇>〇</option>
-                      <option value=〇/当>〇/当</option>
-                      <option value=深夜>深夜</option>
-                      <option value=A/公>A/公</option>
-                      <option value=公/A>公/A</option>
-                      <option value=A/有>A/有</option>
-                      <option value=有/A>有/A</option>
-                      <option value=公/当>公/当</option>
-                      <option value=公>公</option>
-                      <option value=有給>有給</option>
-                      <option value=時間有給>時間有給</option>
-                      <option value=特休>特休</option>
-                      <option value=振休>振休</option>
-                      <option value=欠勤>欠勤</option>
-                    </select>
-                </td>
-                <td v-if="element.show">{{searchTimeListValue(element.starttime)}}</td>
-                <td v-if="!element.show">
-                  <select v-model="element.editStartTime">
-                      <option v-for="time in timeList" :value="time.value">
-                      {{time.text}}
-                      </option>
-                  </select>
-                </td>
-                <td v-if="element.show">{{searchTimeListValue(element.endtime)}}</td>
-                <!-- 夜勤区分がfalseの場合-->
-                <td v-if="!element.show && !element.nightWork">
-                   <select v-model="element.editEndTime" >
-                      <option v-for="time in timeList" :value="time.value">
-                      {{time.text}}
-                      </option>
-                   </select>
-                </td>
-                <!-- 夜勤区分がtrueの場合-->
-                <td v-if="!element.show && element.nightWork">
-                   <select v-model="element.editEndTime" >
-                      <option v-for="time in timeList" :value="time.nightWorkValue">
-                      {{time.text}}
-                      </option>
-                   </select>
-                </td>
-                <td>{{element.workTime}}</td>
-                <td>{{element.midnightWorkTime}}</td>
-                <td>{{element.restTime}}</td>
-                <td>{{element.overtime}}</td>
-                <td>{{element.midnightOvertime}}</td>
-                <td v-if="element.show">{{element.reason}}</td>
-                <td v-if="!element.show">
-                 <input v-model="element.editReason">
-                </td>
-                <td v-if="element.show">{{element.paidTime}}</td>
-                <td v-if="!element.show">
-                <select v-model="element.editPaidTime">
-                      <option value=30>30</option>
-                      <option value=60>60</option>
-                      <option value=90>90</option>
-                      <option value=120>120</option>
-                      <option value=150>150</option>
-                      <option value=180>180</option>
-                      <option value=210>210</option>
-                      <option value=240>240</option>
-                      <option value=270>270</option>
-                      <option value=300>300</option>
-                      <option value=330>330</option>
-                      <option value=360>360</option>
-                      <option value=390>390</option>
-                      <option value=420>420</option>
-                      <option value=450>450</option>
-                      <option value=480>480</option>
-                    </select>
-                  </td>
-                <td v-if="element.show"><button class="btn btn-outline-dark" v-on:click="edit(element)" >編集</button></td>
-                <td v-if="element.show"><button class="btn btn-outline-dark" v-on:click="deleate(element);totalWorkday()" >削除</button></td>
-                <td v-if="!element.show"><button class="btn btn-outline-dark" v-on:click="confirm(element);total()" >確定</button></td>
-                <td v-if="!element.show"><button class="btn btn-outline-dark" v-on:click="cancel(element)" >キャンセル</button></td>
-
-              <div v-if="element.show">
-              </div>
-
-　　         </tr>
-            </tbody>
-         </table>
-     </div>
-  </div>
-
+</div>
 </template>
 
 <script>
@@ -141,59 +151,108 @@ export default {
     return {
       current: 0,
       meisaiList: null,
-      
-      //勤務が深夜の場合は勤務終了時間にnightWorkValueを使用する。
-      timeList:[
-        {id : 1, value:"8:15", nightWorkValue:"32:15", text: "8:15" },
-        {id : 2, value:"8:45", nightWorkValue:"32:45", text: "8:45" },
-        {id : 3, value:"9:15", nightWorkValue:"33:15", text: "9:15" },
-        {id : 4, value:"9:45", nightWorkValue:"33:45", text: "9:45" },
-        {id : 5, value:"10:15", nightWorkValue:"34:15", text: "10:15" },
-        {id : 6, value:"10:45", nightWorkValue:"34:45", text: "10:45" },
-        {id : 7, value:"11:15", nightWorkValue:"35:15", text: "11:15" },
-        {id : 8, value:"11:45", nightWorkValue:"35:45", text: "11:45" },
-        {id : 9, value:"12:15", nightWorkValue:"36:15", text: "12:15" },
-        {id : 10, value:"12:45", nightWorkValue:"36:45", text: "12:45" },
-        {id : 11, value:"13:15", nightWorkValue:"13:15", text: "13:15" },
-        {id : 12, value:"13:45", nightWorkValue:"13:45", text: "13:45" },
-        {id : 13, value:"14:15", nightWorkValue:"14:15", text: "14:15" },
-        {id : 14, value:"14:45", nightWorkValue:"14:45", text: "14:45" },
-        {id : 15, value:"15:15", nightWorkValue:"15:15", text: "15:15" },
-        {id : 16, value:"15:45", nightWorkValue:"15:45", text: "15:45" },
-        {id : 17, value:"16:15", nightWorkValue:"16:15", text: "16:15" },
-        {id : 18, value:"16:45", nightWorkValue:"16:45", text: "16:45" },
-        {id : 19, value:"17:15", nightWorkValue:"17:15", text: "17:15" },
-        {id : 20, value:"17:45", nightWorkValue:"17:45", text: "17:45" },
-        {id : 21, value:"18:15", nightWorkValue:"18:15", text: "18:15" },
-        {id : 22, value:"18:45", nightWorkValue:"18:45", text: "18:45" },
-        {id : 23, value:"19:15", nightWorkValue:"19:15", text: "19:15" },
-        {id : 24, value:"19:45", nightWorkValue:"19:45", text: "19:45" },
-        {id : 25, value:"20:15", nightWorkValue:"20:15", text: "20:15" },
-        {id : 26, value:"20:45", nightWorkValue:"20:45", text: "20:45" },
-        {id : 27, value:"21:15", nightWorkValue:"21:15", text: "21:15" },
-        {id : 28, value:"21:45", nightWorkValue:"21:45", text: "21:45" },
-        {id : 29, value:"22:15", nightWorkValue:"22:15", text: "22:15" },
-        {id : 30, value:"22:45", nightWorkValue:"22:45", text: "22:45" },
-        {id : 31, value:"23:15", nightWorkValue:"23:15", text: "23:15" },
-        {id : 32, value:"23:45", nightWorkValue:"23:45", text: "23:45" },
-        {id : 33, value:"24:15", nightWorkValue:"24:15", text: "00:15" },
-        {id : 34, value:"24:45", nightWorkValue:"24:45", text: "00:45" },
-        {id : 35, value:"25:15", nightWorkValue:"25:15", text: "1:15" },
-        {id : 36, value:"25:45", nightWorkValue:"25:45", text: "1:45" },
-        {id : 37, value:"26:15", nightWorkValue:"26:15", text: "2:15" },
-        {id : 38, value:"26:45", nightWorkValue:"26:45", text: "2:45" },
-        {id : 39, value:"27:15", nightWorkValue:"27:15", text: "3:15" },
-        {id : 40, value:"27:45", nightWorkValue:"27:45", text: "3:45" },
-        {id : 41, value:"28:15", nightWorkValue:"28:15", text: "4:15" },
-        {id : 42, value:"28:45", nightWorkValue:"28:45", text: "4:45" },
-        {id : 43, value:"29:15", nightWorkValue:"29:15", text: "5:15" },
-        {id : 44, value:"29:45", nightWorkValue:"29:45", text: "5:45" },
-        {id : 45, value:"30:15", nightWorkValue:"30:15", text: "6:15" },
-        {id : 46, value:"30:45", nightWorkValue:"30:45", text: "6:45" },
-        {id : 47, value:"31:15", nightWorkValue:"31:15", text: "7:15" },
-        {id : 48, value:"31:45", nightWorkValue:"31:45", text: "7:45" },
-        {id : 49, value:"32:00", nightWorkValue:"32:00", text: "8:00" },
-      ],
+      dayShift:[
+          {id : 1, value:"8:15",   text: "8:15" },
+          {id : 2, value:"8:45",   text: "8:45" },
+          {id : 3, value:"9:15",   text: "9:15" },
+          {id : 4, value:"9:45",   text: "9:45" },
+          {id : 5, value:"10:15",  text: "10:15" },
+          {id : 6, value:"10:45",  text: "10:45" },
+          {id : 7, value:"11:15",  text: "11:15" },
+          {id : 8, value:"11:45",  text: "11:45" },
+          {id : 9, value:"12:15",  text: "12:15" },
+          {id : 10, value:"12:45", text: "12:45" },
+          {id : 11, value:"13:15", text: "13:15" },
+          {id : 12, value:"13:45", text: "13:45" },
+          {id : 13, value:"14:15", text: "14:15" },
+          {id : 14, value:"14:45", text: "14:45" },
+          {id : 15, value:"15:15", text: "15:15" },
+          {id : 16, value:"15:45", text: "15:45" },
+          {id : 17, value:"16:15", text: "16:15" },
+          {id : 18, value:"16:45", text: "16:45" },
+          {id : 19, value:"17:15", text: "17:15" },
+          {id : 20, value:"17:45", text: "17:45" },
+          {id : 21, value:"18:15", text: "18:15" },
+          {id : 22, value:"18:45", text: "18:45" },
+          {id : 23, value:"19:15", text: "19:15" },
+          {id : 24, value:"19:45", text: "19:45" },
+          {id : 25, value:"20:15", text: "20:15" },
+          {id : 26, value:"20:45", text: "20:45" },
+          {id : 27, value:"21:15", text: "21:15" },
+          {id : 28, value:"21:45", text: "21:45" },
+          {id : 29, value:"22:15", text: "22:15" },
+          {id : 30, value:"22:45", text: "22:45" },
+          {id : 31, value:"23:15", text: "23:15" },
+          {id : 32, value:"23:45", text: "23:45" },
+          {id : 33, value:"24:15", text: "00:15" },
+          {id : 34, value:"24:45", text: "00:45" },
+          {id : 35, value:"25:15", text: "1:15" },
+          {id : 36, value:"25:45", text: "1:45" },
+          {id : 37, value:"26:15", text: "2:15" },
+          {id : 38, value:"26:45", text: "2:45" },
+          {id : 39, value:"27:15", text: "3:15" },
+          {id : 40, value:"27:45", text: "3:45" },
+          {id : 41, value:"28:15", text: "4:15" },
+          {id : 42, value:"28:45", text: "4:45" },
+          {id : 43, value:"29:15", text: "5:15" },
+          {id : 44, value:"29:45", text: "5:45" },
+          {id : 45, value:"30:15", text: "6:15" },
+          {id : 46, value:"30:45", text: "6:45" },
+          {id : 47, value:"31:15", text: "7:15" },
+          {id : 48, value:"31:45", text: "7:45" },
+          {id : 49, value:"32:00", text: "8:00" },
+         ],
+      nightShift: [
+          {id : 1, value:"32:15", text: "8:15" },
+          {id : 2, value:"32:45", text: "8:45" },
+          {id : 3, value:"33:15", text: "9:15" },
+          {id : 4, value:"33:45", text: "9:45" },
+          {id : 5, value:"34:15", text: "10:15" },
+          {id : 6, value:"34:45", text: "10:45" },
+          {id : 7, value:"35:15", text: "11:15" },
+          {id : 8, value:"35:45", text: "11:45" },
+          {id : 9, value:"36:15", text: "12:15" },
+          {id : 10, value:"36:45", text: "12:45" },
+          {id : 11, value:"13:15", text: "13:15" },
+          {id : 12, value:"13:45", text: "13:45" },
+          {id : 13, value:"14:15", text: "14:15" },
+          {id : 14, value:"14:45", text: "14:45" },
+          {id : 15, value:"15:15", text: "15:15" },
+          {id : 16, value:"15:45", text: "15:45" },
+          {id : 17, value:"16:15", text: "16:15" },
+          {id : 18, value:"16:45", text: "16:45" },
+          {id : 19, value:"17:15", text: "17:15" },
+          {id : 20, value:"17:45", text: "17:45" },
+          {id : 21, value:"18:15", text: "18:15" },
+          {id : 22, value:"18:45", text: "18:45" },
+          {id : 23, value:"19:15", text: "19:15" },
+          {id : 24, value:"19:45", text: "19:45" },
+          {id : 25, value:"20:15", text: "20:15" },
+          {id : 26, value:"20:45", text: "20:45" },
+          {id : 27, value:"21:15", text: "21:15" },
+          {id : 28, value:"21:45", text: "21:45" },
+          {id : 29, value:"22:15", text: "22:15" },
+          {id : 30, value:"22:45", text: "22:45" },
+          {id : 31, value:"23:15", text: "23:15" },
+          {id : 32, value:"23:45", text: "23:45" },
+          {id : 33, value:"24:15", text: "00:15" },
+          {id : 34, value:"24:45", text: "00:45" },
+          {id : 35, value:"25:15", text: "1:15" },
+          {id : 36, value:"25:45", text: "1:45" },
+          {id : 37, value:"26:15", text: "2:15" },
+          {id : 38, value:"26:45", text: "2:45" },
+          {id : 39, value:"27:15", text: "3:15" },
+          {id : 40, value:"27:45", text: "3:45" },
+          {id : 41, value:"28:15", text: "4:15" },
+          {id : 42, value:"28:45", text: "4:45" },
+          {id : 43, value:"29:15", text: "5:15" },
+          {id : 44, value:"29:45", text: "5:45" },
+          {id : 45, value:"30:15", text: "6:15" },
+          {id : 46, value:"30:45", text: "6:45" },
+          {id : 47, value:"31:15", text: "7:15" },
+          {id : 48, value:"31:45", text: "7:45" },
+          {id : 49, value:"32:00", text: "8:00" },
+        ],
       //勤務日数の合計
       totalWork: 0,
       //従業時間の合計
@@ -212,10 +271,17 @@ export default {
       totalOndutyWork: 0,
       //夜勤の合計
       totalNightWork: 0,
+      //提出ステータス
+      status: null,
+      //提出者
+      submitter: null,
+      //読み込みデータ
+      readData : null
     };
   },
 
   methods: {
+
     //日付をYYYY-MM-DDにの形に整形する。
     formatDate: function (dt) {
       const y = dt.getFullYear();
@@ -224,19 +290,30 @@ export default {
       const result = y + "-" + m + "-" + d;
       return result;
     },
+
     //対象月を前月にする処理。
     goPrevMonth() {
       this.current--;
     },
+
     //対象月を次月にする処理。
     goNextMonth() {
       this.current++;
     },
 
+    //勤務で"深夜"を選んだ場合はnightWorkをtrueにして、勤務終了時間に使用するshiftをわける。
+    selectedWork(selectedElement) {
+      if(selectedElement.editWork == "深夜"){
+         selectedElement.nightWork = true;
+      } else {
+         selectedElement.nightWork = false;
+      }
+      console.log(selectedElement.nightWork)
+    },
+
     //「編集」ボタンを押した時に明細を編集する。
     edit: function (selectedElement) {
       selectedElement.editWork = selectedElement.work;
-      console.log(selectedElement.nightWork)
       selectedElement.editStartTime = selectedElement.starttime;
       selectedElement.editEndTime = selectedElement.endtime;
       selectedElement.editWorkTime = selectedElement.workTime;
@@ -247,7 +324,6 @@ export default {
       selectedElement.editReason = selectedElement.reason;
       selectedElement.editPaidTime = selectedElement.paidTime;
       selectedElement.show = false;
-      //selectedElement.nightWork = false;
     },
 
     //「確定」ボタンを押した時の動作
@@ -256,27 +332,21 @@ export default {
       selectedElement.starttime = selectedElement.editStartTime;
       selectedElement.endtime = selectedElement.editEndTime;
       const work = selectedElement.work;
-      if(work == "深夜"){
-        selectedElement.nightWork = true;
-      } else {
-        selectedElement.nightWork = false;
-      }
       const starttime = selectedElement.starttime;
       const endtime = selectedElement.endtime;
       const start = starttime.split(":");
       const startTimeMinute = Number(start[0] * 60) + Number(start[1]);
       const end = endtime.split(":");
       const endTimeMinute = Number(end[0] * 60) + Number(end[1]);
-
       //明細の従業時間を自動算出する。
       selectedElement.workTime = workTime(starttime, endtime, work)/60;
       //明細の22時～5時にかかる従業時間を自動算出する
       selectedElement.midnightWorkTime =  midnightWorkTime(starttime, endtime)/60;
-      //勤務開始22:15	勤務終了5:15等、明細の22時～5時にかかる従業時間が従業時間を超えていた場合を考慮する。
+      console.log(selectedElement.midnightWorkTime)
+      //勤務開始22:15	勤務終了5:15等、明細の22時～5時にかかる従業時間が従業時間を超えていた場合は従業時間を2時～5時にかかる従業時間とする。
       if(selectedElement.midnightWorkTime > selectedElement.workTime){
-        selectedElement.midnightWorkTime = selectedElement.workTime/60;
+        selectedElement.midnightWorkTime = selectedElement.workTime;
       }
-
       //明細の休憩時間を自動算出する。
       if (endTimeMinute - startTimeMinute >= 480) {
         selectedElement.restTime = "60分";
@@ -290,7 +360,7 @@ export default {
       //明細の22時～5時にかかる残業時間を自動算出する。
       const midnightOver = midnightOvertime(starttime, endtime, work);
       selectedElement.midnightOvertime = midnightOver/60;
-    　//20時15分から6時15分まで勤務した場合、22時から5時にかかる残業時間が-15になるので0になるようにする。
+      //20時15分から6時15分まで勤務した場合、22時から5時にかかる残業時間が-15になるので0になるようにする。
       if(selectedElement.midnightOvertime<0){
         selectedElement.midnightOvertime = 0
       }
@@ -305,6 +375,7 @@ export default {
     //キャンセルボタンを押した編集明細に空データを代入する。
     cancel: function (selectedElement) {
       selectedElement.editWork = "";
+      selectedElement.nightWork = "";
       selectedElement.editStartTime = "";
       selectedElement.editEndTime = "";
       selectedElement.editworkTime = "";
@@ -315,12 +386,12 @@ export default {
       selectedElement.editReason = "";
       selectedElement.editPaidTime = "";
       selectedElement.show = true;
-      selectedElement.nightWork = false;
     },
 
     //「削除」ボタンを押した時に日付と曜日以外の列の値を空データにする。
     deleate: function (element) {
       element.work = "";
+      element.nightWork = "";
       element.starttime = "";
       element.endtime = "";
       element.workTime = "";
@@ -333,23 +404,59 @@ export default {
       this.total();
     },
 
+  //「一時保存」ボタンを押した時に、statusを1(一時保存)に更新してリクエストを送信する
+    temporarilySaved: function(){
+      //提出者が未入力の場合は一時保存に失敗する。
+      if(this.submitter == null){
+        alert('提出者が未入力の為、一時保存に失敗しました。');
+      } else{
+      //一時保存ボタンを押した時はstatusを1(一時保存)に更新する。
+      this.status = 1;
+      const url = "http://127.0.0.1:8000/api/submission";
+      //エンドポイントにクエリパラメータでpostでリクエストを送信する。
+      axios.post(url,{data:this.meisaiList,status:this.status,submitter:this.submitter})
+      //送信結果をレスポンスという引数で受け取る。
+      .then((response) => {
+       console.log(response) 
+      });
+      alert('入力データを一時保存しました。');
+      }
+    },
+
+    //「保存データ読み込み」ボタンを押した時に、statusが1(一時保存)で最も直近に一時保存されたデータを取得する。
+    read: function(){
+      const url = "http://127.0.0.1:8000/api/temporary-kintai";
+      axios.get(url).then(response => {
+        this.meisaiList = response.data[0].kintai;
+        this.submitter = response.data[0].submitter;
+        console.log(this.meisaiList);
+        }
+      );
+      // axios.get(url).then(response => {this.readData = response.data.results})
+    },
+
    //「提出」ボタンを押した時に、本当に提出するか選択するようにする。
     subMission: function(){
       const a = confirm("提出しますか？");
       console.log(a)
-      if(a==true){
+      if(a && this.submitter!== null){
+        //提出ボタンを押した時はstatusを2(提出)に更新する。
+        this.status = 2;
+        console.log(this.status);
+        console.log(this.submitter);
         const url = "http://127.0.0.1:8000/api/submission";
-        //エンドポイントにクエリパラメータでgetでリクエストを送信する。
-         axios.post(url,this.meisaiList)
+        //エンドポイントにクエリパラメータでpostでリクエストを送信する。
+         axios.post(url,{data:this.meisaiList,status:this.status,submitter:this.submitter})
         //送信結果をレスポンスという引数で受け取る。
          .then((response) => {
           console.log(response) 
         });
+      } else if(a && this.submitter == null) {
+         alert('提出者が未入力の為、提出に失敗しました。');
       } else {
-        console.log("こんばんは")
+         console.log("提出しませんでした。");
       }
     },
-
 
     //合計勤務日数を計算する。
     totalWorkday: function () {
@@ -460,8 +567,19 @@ export default {
     },
 
     //timeListの中から確定した時間と同じvalueのオブジェクトを探す。
-    searchTimeListValue:function(time){
-      const a = this.timeList.filter((ele) => {
+    searchDayShiftValue:function(time){
+      const a = this.dayShift.filter((ele) => {
+        return time == ele.value;
+      });
+      if(a[0]==null){
+      return "";
+      }
+      return a[0].text;
+    },
+
+    //nightShiftの中から確定した時間と同じvalueのオブジェクトを探す。
+    searchNightShiftValue:function(time){
+      const a = this.nightShift.filter((ele) => {
         return time == ele.value;
       });
       if(a[0]==null){
@@ -481,15 +599,16 @@ export default {
       this.totalWorkOverTimeHoliday();
       this.totalPaid();
     },
-
   },
 
   computed: {
+
     //対象月を作成する。
     currentMoment: function () {
       //現在の日時からcurrentプロパティをの数値分の月数を足す。
       return moment().add(this.current, "months");
     },
+
     subjectMonth() {
       //現在の日時のフォーマットを"YYYY年MM"月の形式に変換する。
       return this.currentMoment.format("YYYY年MM月");
@@ -503,6 +622,7 @@ export default {
       //console.log(daysOfMonth)
       return numOfMonth;
     },
+
     //今月の最初の日の曜日を取得。
     calendarFirstdayWeek() {
       // この月の1日の曜日（0~6の数値で取得）(ex:月曜日であれば1を取得)
@@ -515,7 +635,6 @@ export default {
     calendarDay: function () {
       let Calendar = {};
       let CalendarArray = [];
-
       //今月の最初の日の曜日をFirstdayWeekに代入　ex)2021年12月の場合は、1日は水曜日となる為、3を代入。
       //土曜日の場合はisSaturdayをtrueにする。
       //日曜日の場合はisSundayをtrueにする。
@@ -529,8 +648,8 @@ export default {
         "(金)",
         "(土)",
       ];
-
       for (let i = 1; i <= this.calendarData; i++) {
+        Calendar.date = this.subjectMonth;
         Calendar.day = i;
         Calendar.week = japanWeek[FirstdayWeek];
         if (Calendar.week == "(土)") {
@@ -555,7 +674,6 @@ export default {
         Calendar.reason = "";
         Calendar.paidTime = "";
         Calendar.editWork = "";
-        Calendar.editNightWork = "";
         Calendar.editStartTime = "";
         Calendar.editEndTime = "";
         Calendar.editWorkTime = "";
