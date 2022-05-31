@@ -1,18 +1,16 @@
 
 <template>
-<div class="container mx-auto container-fluid " style="background-color: #FFFCFB" >
-  <div style="padding: 10px; margin-bottom: 10px; border: 1px dashed #333333;">
+<div class="container mx-auto container-fluid" style="background-color: #FFFCFB" >
+  <div class = "head" style="padding: 10px; border: 1px dashed #333333;">
     <p class = "title">【勤怠表入力】
       提出者：<input type="text" v-model = "submitter">
     </p>
     <p>({{ subjectMonth }})
-      <button type="button" class="btn btn-primary" @click="goPrevMonth">前月</button>
-      <button type="button" class="btn btn-primary" @click="goNextMonth">次月</button>　
+      <button type="button" class="btn btn-primary" @click="goPrevMonth">前月</button>　
       <button type="button" class="btn btn-warning" @click="subMission">提出</button>　
       <button type="button" class="btn btn btn-info" @click="temporarilySaved">一時保存</button>
       <button type="button" class="btn btn btn-info" @click="read">保存データ読み込み</button>
-      <!-- <button @click="totalWorktime">検証用</button>
-      <button @click="testtest">検証用2</button> -->
+      <!-- <button @click="totalWorktime">検証用</button> -->
     </p>
     <div> 
       <p>合計勤務日数：{{ totalWork }}日</p>
@@ -23,26 +21,27 @@
       <p>    有給時間：{{ totalPaidTime }}分</p>
     </div>
   </div>
-  <div class="table-responsive">
+  <div>
     <table class="table">
-      <thead thead class="table-light">
+      <thead>
         <tr>
           <th scope="col" style="background-color: #EEEEEE">日付</th>
           <th scope="col" style="background-color: #EEEEEE">曜日</th>
           <th scope="col" style="background-color: #CCFFCC">勤務</th>
-          <th scope="col" style="background-color: #CCFFCC">勤務開始</th>
-          <th scope="col" style="background-color: #CCFFCC">勤務終了</th>
+          <th scope="col" style="background-color: #CCFFCC">勤務<br>開始</th>
+          <th scope="col" style="background-color: #CCFFCC">勤務<br>終了</th>
           <th scope="col" style="background-color: #CCFFCC">従業時間</th>
-          <th scope="col" style="background-color: #CCFFCC">22時～5時の従業</th>
+          <th scope="col" style="background-color: #CCFFCC">22時～5時<br>従業</th>
           <th scope="col" style="background-color: #CCFFCC">休憩</th>
           <th scope="col" style="background-color: #CCFFFF">残業時間</th>
-          <th scope="col" style="background-color: #CCFFFF">22時～5時の残業</th>
-          <th scope="col" style="background-color: #CCFFFF">残業理由・備考</th>
+          <th scope="col" style="background-color: #CCFFFF">22時～5時<br>残業</th>
+          <th scope="col" style="background-color: #CCFFFF">残業理由・<br>備考</th>
           <th scope="col" style="background-color: #FFFF99">有給</th>
+          <th colspan=2 scope="col" style="background-color: #FFFCFB"></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(element,index) of meisai" key="index" >
+        <tr v-for="(element,index) of meisaiList" key="index" >
           <td>{{element.day}}</td>
           <td v-bind:class="{blue: element.isSaturday, red: element.isSunday }">{{element.week}}</td>
           <td v-if="element.show">{{element.work}}</td>
@@ -146,113 +145,184 @@
 //同じ階層にあるkintai.jsを読み込む。
 import { workTime, overTime, midnightOvertime, midnightWorkTime } from "./kintai";
 
+const subjectMonth = (targetMonth) => {
+  //現在の日時のフォーマットを"YYYY年MM"月の形式に変換する。
+  return targetMonth.format("YYYY年MM月");
+};
+
+// const momentYear = (targetMonth) => {
+//   return targetMonth.add(this.current, "months")
+// };
+
+//今月の日数を取得　ex)2021年11月30なら30を返す。
+const calendarData = (targetMonth) => {
+  const numOfMonth = targetMonth.endOf("month").date();
+  console.log(numOfMonth);
+  return numOfMonth;
+};
+
+//今月の最初の日の曜日を取得。
+const calendarFirstdayWeek = (targetMonth) => {
+// この月の1日の曜日（0~6の数値で取得）(ex:月曜日であれば1を取得)
+  const firstWeekDay = targetMonth.startOf("month").weekday();
+  return firstWeekDay;
+};
+
+//今月のカレンダーのオブジェクトを作成。ex)2021年11月なら30日分のオブジェクト。
+const calendarDay = (targetMonth) => {
+  let Calendar = {};
+  let CalendarArray = [];
+  //今月の最初の日の曜日をFirstdayWeekに代入　ex)2021年12月の場合は、1日は水曜日となる為、3を代入。
+  let FirstdayWeek = calendarFirstdayWeek(targetMonth); 
+  //曜日の値を日～月に変換する為の配列を用意する。
+  const japanWeek = ["(日)","(月)","(火)","(水)","(木)","(金)","(土)"];
+  for (let i = 1; i <= calendarData(targetMonth); i++) {
+    Calendar.date = subjectMonth(targetMonth);
+    Calendar.day = i;
+    Calendar.week = japanWeek[FirstdayWeek];
+    //土曜日の場合はisSaturdayをtrueにする。
+    //日曜日の場合はisSundayをtrueにする。
+    if (Calendar.week == "(土)") {
+      Calendar.isSunday = false;
+      Calendar.isSaturday = true;
+    } 
+     else if (Calendar.week == "(日)") {
+      Calendar.isSaturday = false;
+      Calendar.isSunday = true;
+    } 
+      else {
+      Calendar.isSaturday = false;
+      Calendar.isSunday = false;
+    }
+      Calendar.work = "";
+      Calendar.nightWork = "";
+      Calendar.starttime = "";
+      Calendar.endtime = "";
+      Calendar.workTime = "";
+      Calendar.midnightWorkTime = "";
+      Calendar.restTime = "";
+      Calendar.overtime = "";
+      Calendar.midnightOvertime = "";
+      Calendar.reason = "";
+      Calendar.paidTime = "";
+      Calendar.editWork = "";
+      Calendar.editStartTime = "";
+      Calendar.editEndTime = "";
+      Calendar.editWorkTime = "";
+      Calendar.editMidnightWorkTime = "";
+      Calendar.editRestTime = "";
+      Calendar.editOverTime = "";
+      Calendar.editMidnightOvertime = "";
+      Calendar.editReason = "";
+      Calendar.editPaidTime = "";
+      Calendar.show = true;
+      CalendarArray.push({ ...Calendar });
+    if (FirstdayWeek == 6) {
+      FirstdayWeek = FirstdayWeek - 6;
+    } 
+     else {
+      FirstdayWeek = FirstdayWeek + 1;
+    }
+  }
+  console.log(CalendarArray);
+  return CalendarArray;
+};
+
+//dayShiftを作成する。
+const makeDayShift = () => {
+  let dayShift = {};
+  let dayShiftArray = [];
+  let valueTimeHour = 7;
+  let valueTimeMinute = 45;
+  let textTimeHour = 7;
+  let textTimeMinute = 45;
+  for (let i = 1; i <= 49; i++) {
+    dayShift.id = i;
+    if(valueTimeMinute == 15 && dayShift.id != 33) {
+      valueTimeMinute = valueTimeMinute + 30;
+      textTimeMinute = textTimeMinute + 30;
+      dayShift.value = String(valueTimeHour)+":"+String(valueTimeMinute);
+      dayShift.text = String(textTimeHour)+":"+String(textTimeMinute);
+    } 
+      else if (valueTimeMinute == 45 && dayShift.id != 33) {
+      valueTimeMinute = 15;
+      valueTimeHour = valueTimeHour + 1;
+      textTimeMinute = 15; 
+      textTimeHour = textTimeHour + 1;
+      dayShift.value = String(valueTimeHour)+":"+String(valueTimeMinute);
+      dayShift.text = String(textTimeHour)+":"+String(textTimeMinute);
+    } 
+      else {
+      valueTimeHour = valueTimeHour + 1;
+      valueTimeMinute = 15;
+      textTimeHour = textTimeHour - 23;
+      textTimeMinute = 15;
+      dayShift.value = String(valueTimeHour)+":"+String(valueTimeMinute);
+      dayShift.text = String(textTimeHour)+":"+String(textTimeMinute);
+    } 
+      dayShiftArray.push({ ...dayShift});            
+  }
+  return dayShiftArray;
+};
+
+//nightShiftを作成する。
+const makeNightShift = () => {
+  let nightShift = {};
+  let nightShiftArray = [];
+  let valueTimeHour = 31;
+  let valueTimeMinute = 45;
+  let textTimeHour = 7;
+  let textTimeMinute = 45;
+  const idCheack = [11,33]
+  for (let i = 1; i <= 49; i++) {
+    nightShift.id = i;
+    let cheack = idCheack.includes(nightShift.id);
+    if(valueTimeMinute == 15 && cheack == false) {
+      valueTimeMinute = valueTimeMinute + 30;
+      textTimeMinute = textTimeMinute + 30;
+      nightShift.value = String(valueTimeHour)+":"+String(valueTimeMinute);
+      nightShift.text = String(textTimeHour)+":"+String(textTimeMinute);
+    } 
+      else if (valueTimeMinute == 45 && cheack == false) {
+      valueTimeMinute = 15;
+      valueTimeHour = valueTimeHour + 1;
+      textTimeMinute = 15; 
+      textTimeHour = textTimeHour + 1;
+      nightShift.value = String(valueTimeHour)+":"+String(valueTimeMinute);
+      nightShift.text = String(textTimeHour)+":"+String(textTimeMinute);
+    } 
+      else if(nightShift.id == 11) {
+      textTimeHour = textTimeHour + 1;
+      valueTimeMinute = 15;
+      valueTimeHour = valueTimeHour - 23;
+      textTimeMinute = 15;
+      nightShift.value = String(valueTimeHour)+":"+String(valueTimeMinute);
+      nightShift.text = String(textTimeHour)+":"+String(textTimeMinute);
+    } 
+      else {
+      valueTimeHour = valueTimeHour + 1;
+      valueTimeMinute = 15;
+      textTimeHour = textTimeHour - 23;
+      textTimeMinute = 15;
+      nightShift.value = String(valueTimeHour)+":"+String(valueTimeMinute);
+      nightShift.text = String(textTimeHour)+":"+String(textTimeMinute);
+    }
+      nightShiftArray.push({ ...nightShift});            
+  }
+  return nightShiftArray;
+}
+
 export default {
   data() {
     return {
+      //カレンダー表示月
+      caldendarMonth: null,
       current: 0,
       meisaiList: null,
-      dayShift:[
-          {id : 1, value:"8:15",   text: "8:15" },
-          {id : 2, value:"8:45",   text: "8:45" },
-          {id : 3, value:"9:15",   text: "9:15" },
-          {id : 4, value:"9:45",   text: "9:45" },
-          {id : 5, value:"10:15",  text: "10:15" },
-          {id : 6, value:"10:45",  text: "10:45" },
-          {id : 7, value:"11:15",  text: "11:15" },
-          {id : 8, value:"11:45",  text: "11:45" },
-          {id : 9, value:"12:15",  text: "12:15" },
-          {id : 10, value:"12:45", text: "12:45" },
-          {id : 11, value:"13:15", text: "13:15" },
-          {id : 12, value:"13:45", text: "13:45" },
-          {id : 13, value:"14:15", text: "14:15" },
-          {id : 14, value:"14:45", text: "14:45" },
-          {id : 15, value:"15:15", text: "15:15" },
-          {id : 16, value:"15:45", text: "15:45" },
-          {id : 17, value:"16:15", text: "16:15" },
-          {id : 18, value:"16:45", text: "16:45" },
-          {id : 19, value:"17:15", text: "17:15" },
-          {id : 20, value:"17:45", text: "17:45" },
-          {id : 21, value:"18:15", text: "18:15" },
-          {id : 22, value:"18:45", text: "18:45" },
-          {id : 23, value:"19:15", text: "19:15" },
-          {id : 24, value:"19:45", text: "19:45" },
-          {id : 25, value:"20:15", text: "20:15" },
-          {id : 26, value:"20:45", text: "20:45" },
-          {id : 27, value:"21:15", text: "21:15" },
-          {id : 28, value:"21:45", text: "21:45" },
-          {id : 29, value:"22:15", text: "22:15" },
-          {id : 30, value:"22:45", text: "22:45" },
-          {id : 31, value:"23:15", text: "23:15" },
-          {id : 32, value:"23:45", text: "23:45" },
-          {id : 33, value:"24:15", text: "00:15" },
-          {id : 34, value:"24:45", text: "00:45" },
-          {id : 35, value:"25:15", text: "1:15" },
-          {id : 36, value:"25:45", text: "1:45" },
-          {id : 37, value:"26:15", text: "2:15" },
-          {id : 38, value:"26:45", text: "2:45" },
-          {id : 39, value:"27:15", text: "3:15" },
-          {id : 40, value:"27:45", text: "3:45" },
-          {id : 41, value:"28:15", text: "4:15" },
-          {id : 42, value:"28:45", text: "4:45" },
-          {id : 43, value:"29:15", text: "5:15" },
-          {id : 44, value:"29:45", text: "5:45" },
-          {id : 45, value:"30:15", text: "6:15" },
-          {id : 46, value:"30:45", text: "6:45" },
-          {id : 47, value:"31:15", text: "7:15" },
-          {id : 48, value:"31:45", text: "7:45" },
-          {id : 49, value:"32:00", text: "8:00" },
-         ],
-      nightShift: [
-          {id : 1, value:"32:15", text: "8:15" },
-          {id : 2, value:"32:45", text: "8:45" },
-          {id : 3, value:"33:15", text: "9:15" },
-          {id : 4, value:"33:45", text: "9:45" },
-          {id : 5, value:"34:15", text: "10:15" },
-          {id : 6, value:"34:45", text: "10:45" },
-          {id : 7, value:"35:15", text: "11:15" },
-          {id : 8, value:"35:45", text: "11:45" },
-          {id : 9, value:"36:15", text: "12:15" },
-          {id : 10, value:"36:45", text: "12:45" },
-          {id : 11, value:"13:15", text: "13:15" },
-          {id : 12, value:"13:45", text: "13:45" },
-          {id : 13, value:"14:15", text: "14:15" },
-          {id : 14, value:"14:45", text: "14:45" },
-          {id : 15, value:"15:15", text: "15:15" },
-          {id : 16, value:"15:45", text: "15:45" },
-          {id : 17, value:"16:15", text: "16:15" },
-          {id : 18, value:"16:45", text: "16:45" },
-          {id : 19, value:"17:15", text: "17:15" },
-          {id : 20, value:"17:45", text: "17:45" },
-          {id : 21, value:"18:15", text: "18:15" },
-          {id : 22, value:"18:45", text: "18:45" },
-          {id : 23, value:"19:15", text: "19:15" },
-          {id : 24, value:"19:45", text: "19:45" },
-          {id : 25, value:"20:15", text: "20:15" },
-          {id : 26, value:"20:45", text: "20:45" },
-          {id : 27, value:"21:15", text: "21:15" },
-          {id : 28, value:"21:45", text: "21:45" },
-          {id : 29, value:"22:15", text: "22:15" },
-          {id : 30, value:"22:45", text: "22:45" },
-          {id : 31, value:"23:15", text: "23:15" },
-          {id : 32, value:"23:45", text: "23:45" },
-          {id : 33, value:"24:15", text: "00:15" },
-          {id : 34, value:"24:45", text: "00:45" },
-          {id : 35, value:"25:15", text: "1:15" },
-          {id : 36, value:"25:45", text: "1:45" },
-          {id : 37, value:"26:15", text: "2:15" },
-          {id : 38, value:"26:45", text: "2:45" },
-          {id : 39, value:"27:15", text: "3:15" },
-          {id : 40, value:"27:45", text: "3:45" },
-          {id : 41, value:"28:15", text: "4:15" },
-          {id : 42, value:"28:45", text: "4:45" },
-          {id : 43, value:"29:15", text: "5:15" },
-          {id : 44, value:"29:45", text: "5:45" },
-          {id : 45, value:"30:15", text: "6:15" },
-          {id : 46, value:"30:45", text: "6:45" },
-          {id : 47, value:"31:15", text: "7:15" },
-          {id : 48, value:"31:45", text: "7:45" },
-          {id : 49, value:"32:00", text: "8:00" },
-        ],
+      //日勤シフト
+      dayShift: null,
+      //夜シフト
+      nightShift: null,
       //勤務日数の合計
       totalWork: 0,
       //従業時間の合計
@@ -279,36 +349,31 @@ export default {
       readData : null
     };
   },
+  mounted(){
+    this.meisaiList = calendarDay(moment());
+    this.dayShift = makeDayShift();
+    this.nightShift = makeNightShift();
+    console.log(this.dayShift);
+    console.log(this.nightShift);
+  },
 
   methods: {
-
-    //日付をYYYY-MM-DDにの形に整形する。
-    formatDate: function (dt) {
-      const y = dt.getFullYear();
-      const m = ("00" + (dt.getMonth() + 1)).slice(-2);
-      const d = ("00" + dt.getDate()).slice(-2);
-      const result = y + "-" + m + "-" + d;
-      return result;
-    },
-
     //対象月を前月にする処理。
+    //前月のdateで最後に保存したレコードをテーブルから取得する。
     goPrevMonth() {
       this.current--;
-    },
-
-    //対象月を次月にする処理。
-    goNextMonth() {
-      this.current++;
+      this.meisaiList = calendarDay(moment().add(this.current, "months"));
     },
 
     //勤務で"深夜"を選んだ場合はnightWorkをtrueにして、勤務終了時間に使用するshiftをわける。
     selectedWork(selectedElement) {
       if(selectedElement.editWork == "深夜"){
-         selectedElement.nightWork = true;
-      } else {
-         selectedElement.nightWork = false;
+        selectedElement.nightWork = true;
+      } 
+       else {
+        selectedElement.nightWork = false;
       }
-      console.log(selectedElement.nightWork)
+        console.log(selectedElement.nightWork)
     },
 
     //「編集」ボタンを押した時に明細を編集する。
@@ -350,9 +415,11 @@ export default {
       //明細の休憩時間を自動算出する。
       if (endTimeMinute - startTimeMinute >= 480) {
         selectedElement.restTime = "60分";
-      } else if(endTimeMinute - startTimeMinute < 480 && endTimeMinute - startTimeMinute >= 360) {
+      } 
+       else if(endTimeMinute - startTimeMinute < 480 && endTimeMinute - startTimeMinute >= 360) {
         selectedElement.restTime = "45分";
-      } else {
+      } 
+       else {
         selectedElement.restTime = 0;
       }
       //明細の残業時間を自動算出する。
@@ -409,30 +476,21 @@ export default {
       //提出者が未入力の場合は一時保存に失敗する。
       if(this.submitter == null){
         alert('提出者が未入力の為、一時保存に失敗しました。');
-      } else{
-      //一時保存ボタンを押した時はstatusを1(一時保存)に更新する。
-      this.status = 1;
-      const url = "http://127.0.0.1:8000/api/submission";
-      //エンドポイントにクエリパラメータでpostでリクエストを送信する。
-      axios.post(url,{data:this.meisaiList,status:this.status,submitter:this.submitter})
-      //送信結果をレスポンスという引数で受け取る。
-      .then((response) => {
-       console.log(response) 
-      });
-      alert('入力データを一時保存しました。');
+      } 
+       else {
+        //一時保存ボタンを押した時はstatusを1(一時保存)に更新する。
+        const momentYear = this.currentMoment.year();
+        const momentMonth = this.currentMoment.month();
+        this.status = 1;
+        const url = "http://127.0.0.1:8000/api/submission/${momentYear}/${momentMonth}";
+        //エンドポイントにクエリパラメータでpostでリクエストを送信する。
+        axios.post(url,{data:this.meisaiList,status:this.status,submitter:this.submitter})
+        //送信結果をレスポンスという引数で受け取る。
+        .then((response) => {
+          console.log(response) 
+        });
+        alert('入力データを一時保存しました。');
       }
-    },
-
-    //「保存データ読み込み」ボタンを押した時に、statusが1(一時保存)で最も直近に一時保存されたデータを取得する。
-    read: function(){
-      const url = "http://127.0.0.1:8000/api/temporary-kintai";
-      axios.get(url).then(response => {
-        this.meisaiList = response.data[0].kintai;
-        this.submitter = response.data[0].submitter;
-        console.log(this.meisaiList);
-        }
-      );
-      // axios.get(url).then(response => {this.readData = response.data.results})
     },
 
    //「提出」ボタンを押した時に、本当に提出するか選択するようにする。
@@ -441,52 +499,70 @@ export default {
       console.log(a)
       if(a && this.submitter!== null){
         //提出ボタンを押した時はstatusを2(提出)に更新する。
+        const momentYear = this.currentMoment.year();
+        const momentMonth = this.currentMoment.month();
         this.status = 2;
         console.log(this.status);
         console.log(this.submitter);
-        const url = "http://127.0.0.1:8000/api/submission";
+        const url = "http://127.0.0.1:8000/api/submission/${momentYear}/${momentMonth}";
         //エンドポイントにクエリパラメータでpostでリクエストを送信する。
-         axios.post(url,{data:this.meisaiList,status:this.status,submitter:this.submitter})
+        axios.post(url,{data:this.meisaiList,status:this.status,submitter:this.submitter})
         //送信結果をレスポンスという引数で受け取る。
-         .then((response) => {
-          console.log(response) 
+        .then((response) => {
+        console.log(response) 
         });
-      } else if(a && this.submitter == null) {
-         alert('提出者が未入力の為、提出に失敗しました。');
-      } else {
-         console.log("提出しませんでした。");
+      } 
+       else if(a && this.submitter == null) {
+        alert('提出者が未入力の為、提出に失敗しました。');
+      } 
+       else {
+        console.log("提出しませんでした。");
       }
+    },
+ 
+    //「保存データ読み込み」ボタンを押した時に、statusが1(一時保存)かつ表示月で最も直近に一時保存されたデータを取得する。
+    //`/temporary-kintai/${yesr}/${month}`
+    read: function(){
+      const momentYear = this.currentMoment.year();
+      const momentMonth = this.currentMoment.month();
+      // console.log(momentYear);
+      // console.log(momentMonth);
+      const url = "http://127.0.0.1:8000/api/temporary-kintai/${momentYear}/${momentMonth}";
+      // const url = "http://127.0.0.1:8000/api/temporary-kintai";
+      axios.get(url).then(response => {
+        this.meisaiList = response.data[0].kintai;
+        this.submitter = response.data[0].submitter;
+        console.log(this.meisaiList);
+        this.total();
+        }
+      )
     },
 
     //合計勤務日数を計算する。
     totalWorkday: function () {
       this.totalWork = 0;
-      for (let i = 0; i < this.calendarData; i++) {
-        if (
-          this.meisaiList[i].work == "〇" ||
-          this.meisaiList[i].work == "〇/当"||
-          this.meisaiList[i].work == "深夜"
-        ) {
+      const fullWork = ["〇","〇/当","深夜"];
+      const herfWork = ["A/公","公/A","A/有","有/A"];
+      for (let i = 0; i < this.meisaiList.length; i++) {
+        let fullWorkCheack = fullWork.includes(this.meisaiList[i].work);
+        let herfWorkCheack = herfWork.includes(this.meisaiList[i].work);
+        if (fullWorkCheack == true) {
           this.totalWork = this.totalWork + 1;
-        } else if (
-          this.meisaiList[i].work == "A/公" ||
-          this.meisaiList[i].work == "公/A" ||
-          this.meisaiList[i].work == "A/有" ||
-          this.meisaiList[i].work == "有/A"
-        ) {
+        } 
+         else if (herfWorkCheack == true) {
           this.totalWork = this.totalWork + 0.5;
-        }
+        } 
       }
-      console.log(this.totalWork);
     },
 
     //合計従業時間を計算する。
     totalWorktime: function () {
       this.totalTime = 0;
-      for (let i = 0; i < this.calendarData; i++) {
+      for (let i = 0; i < this.meisaiList.length; i++) {
         if (this.meisaiList[i].workTime == "") {
           this.totalTime = this.totalTime + 0;
-        } else {
+        } 
+         else {
           this.totalTime = this.totalTime + this.meisaiList[i].workTime;
         }
       }
@@ -495,10 +571,11 @@ export default {
     //合計の22時～5時にかかる従業時間を計算する。
     totalWorkMidnightWorkTime: function () {
       this.totalMidnightWorkTime = 0;
-      for (let i = 0; i < this.calendarData; i++) {
+      for (let i = 0; i < this.meisaiList.length; i++) {
         if (this.meisaiList[i].midnightWorkTime == "") {
           this.totalMidnightWorkTime = this.totalMidnightWorkTime + 0;
-        } else {
+        } 
+         else {
           this.totalMidnightWorkTime = this.totalMidnightWorkTime + Number(this.meisaiList[i].midnightWorkTime);
          }
         }
@@ -507,10 +584,11 @@ export default {
     //合計残業時間を計算する。
     totalWorkOverTime: function () {
       this.totalOverTime = 0;
-      for (let i = 0; i < this.calendarData; i++) {
+      for (let i = 0; i < this.meisaiList.length; i++) {
         if (this.meisaiList[i].overtime == "") {
           this.totalOverTime = this.totalOverTime + 0;
-        } else {
+        } 
+         else {
           this.totalOverTime = this.totalOverTime + this.meisaiList[i].overtime;
         }
       }
@@ -519,11 +597,12 @@ export default {
     //合計の22時～5時にかかる残業を計算する。
     totalWorkMidnightOverTime: function () {
       this.totalMidnightOverTime = 0;
-      for (let i = 0; i < this.calendarData; i++) {
+      for (let i = 0; i < this.meisaiList.length; i++) {
         if (this.meisaiList[i].midnightOvertime == "") {
           this.totalMidnightOverTime = this.totalMidnightOverTime + 0;
-        } else {
-          this.totalMidnightOverTime =this.totalMidnightOverTime + Number(this.meisaiList[i].midnightOvertime);
+        } 
+         else {
+          this.totalMidnightOverTime = this.totalMidnightOverTime + Number(this.meisaiList[i].midnightOvertime);
         }
       }
     },
@@ -531,11 +610,10 @@ export default {
     //合計当直回数を計算する。
     totalOnduty: function () {
       this.totalOndutyWork = 0;
-      for (let i = 0; i < this.calendarData; i++) {
-        if (
-          this.meisaiList[i].work == "公/当" ||
-          this.meisaiList[i].work == "〇/当"
-        ) {
+      const onDuty = ["〇/当","公/当"];
+      for (let i = 0; i < this.meisaiList.length; i++) {
+        let onDutyCheack = onDuty.includes(this.meisaiList[i].work);
+        if (onDutyCheack == true) {
           this.totalOndutyWork = this.totalOndutyWork + 1;
         }
       }
@@ -544,10 +622,9 @@ export default {
     //法定休日の合計残業時間を計算する。
     totalWorkOverTimeHoliday: function () {
       this.totalHolidayOverTime = 0;
-      for (let i = 0; i < this.calendarData; i++) {
+      for (let i = 0; i < this.meisaiList.length; i++) {
         if (this.meisaiList[i].week == "(日)") {
-          this.totalHolidayOverTime =
-            this.totalHolidayOverTime + this.meisaiList[i].overtime;
+          this.totalHolidayOverTime = this.totalHolidayOverTime + this.meisaiList[i].overtime;
         }
       }
       console.log(this.totalHolidayOverTime);
@@ -556,17 +633,29 @@ export default {
     //有給の合計時間を計算する。
     totalPaid: function () {
       this.totalPaidTime = 0;
-      for (let i = 0; i < this.calendarData; i++) {
+      for (let i = 0; i < this.meisaiList.length; i++) {
         if (this.meisaiList[i].paidTime == "") {
           this.totalPaidTime = Number(this.totalPaidTime) + 0;
-        } else {
-          this.totalPaidTime =
-            Number(this.totalPaidTime) + Number(this.meisaiList[i].paidTime);
+        } 
+         else {
+          this.totalPaidTime = Number(this.totalPaidTime) + Number(this.meisaiList[i].paidTime);
         }
       }
     },
 
-    //timeListの中から確定した時間と同じvalueのオブジェクトを探す。
+    //それぞれの合計を算出
+    total: function () {
+      this.totalWorkday();
+      this.totalWorktime();
+      this.totalWorkMidnightWorkTime();
+      this.totalWorkOverTime();
+      this.totalWorkMidnightOverTime();
+      this.totalOnduty();
+      this.totalWorkOverTimeHoliday();
+      this.totalPaid();
+    },
+
+    //dayShiftの中から確定した時間と同じvalueのオブジェクトを探す。
     searchDayShiftValue:function(time){
       const a = this.dayShift.filter((ele) => {
         return time == ele.value;
@@ -586,120 +675,23 @@ export default {
       return "";
       }
       return a[0].text;
-    },
-
-    //それぞれの合計を算出
-    total: function () {
-      this.totalWorktime();
-      this.totalWorkMidnightWorkTime();
-      this.totalWorkday();
-      this.totalWorkOverTime();
-      this.totalWorkMidnightOverTime();
-      this.totalOnduty();
-      this.totalWorkOverTimeHoliday();
-      this.totalPaid();
-    },
+    }
   },
 
   computed: {
-
-    //対象月を作成する。
+    // //対象月を作成する。
     currentMoment: function () {
-      //現在の日時からcurrentプロパティをの数値分の月数を足す。
+      //現在の日時からcurrentプロパティをの数値分の月数を引く。
       return moment().add(this.current, "months");
     },
 
     subjectMonth() {
       //現在の日時のフォーマットを"YYYY年MM"月の形式に変換する。
+      this.caldendarMonth = this.currentMoment.format("YYYY年MM月");
+      console.log(this.caldendarMonth);
       return this.currentMoment.format("YYYY年MM月");
     },
-
-    //今月の日数を取得　ex)2021年11月30なら30を返す。
-    calendarData: function () {
-      const numOfMonth = this.currentMoment.endOf("month").date();
-      console.log(numOfMonth);
-      //const daysOfMonth = [...Array(numOfMonth).keys()].map(i => ++i)
-      //console.log(daysOfMonth)
-      return numOfMonth;
-    },
-
-    //今月の最初の日の曜日を取得。
-    calendarFirstdayWeek() {
-      // この月の1日の曜日（0~6の数値で取得）(ex:月曜日であれば1を取得)
-      const firstWeekDay = this.currentMoment.startOf("month").weekday();
-      console.log(firstWeekDay);
-      return firstWeekDay;
-    },
-
-    //今月のカレンダーのオブジェクトを作成。ex)2021年11月なら30日分のオブジェクト。
-    calendarDay: function () {
-      let Calendar = {};
-      let CalendarArray = [];
-      //今月の最初の日の曜日をFirstdayWeekに代入　ex)2021年12月の場合は、1日は水曜日となる為、3を代入。
-      //土曜日の場合はisSaturdayをtrueにする。
-      //日曜日の場合はisSundayをtrueにする。
-      let FirstdayWeek = this.calendarFirstdayWeek; //曜日の値を日～月に変換する為の配列を用意する。
-      const japanWeek = [
-        "(日)",
-        "(月)",
-        "(火)",
-        "(水)",
-        "(木)",
-        "(金)",
-        "(土)",
-      ];
-      for (let i = 1; i <= this.calendarData; i++) {
-        Calendar.date = this.subjectMonth;
-        Calendar.day = i;
-        Calendar.week = japanWeek[FirstdayWeek];
-        if (Calendar.week == "(土)") {
-          Calendar.isSunday = false;
-          Calendar.isSaturday = true;
-        } else if (Calendar.week == "(日)") {
-          Calendar.isSaturday = false;
-          Calendar.isSunday = true;
-        } else {
-          Calendar.isSaturday = false;
-          Calendar.isSunday = false;
-        }
-        Calendar.work = "";
-        Calendar.nightWork = "";
-        Calendar.starttime = "";
-        Calendar.endtime = "";
-        Calendar.workTime = "";
-        Calendar.midnightWorkTime = "";
-        Calendar.restTime = "";
-        Calendar.overtime = "";
-        Calendar.midnightOvertime = "";
-        Calendar.reason = "";
-        Calendar.paidTime = "";
-        Calendar.editWork = "";
-        Calendar.editStartTime = "";
-        Calendar.editEndTime = "";
-        Calendar.editWorkTime = "";
-        Calendar.editMidnightWorkTime = "";
-        Calendar.editRestTime = "";
-        Calendar.editOverTime = "";
-        Calendar.editMidnightOvertime = "";
-        Calendar.editReason = "";
-        Calendar.editPaidTime = "";
-        Calendar.show = true;
-        CalendarArray.push({ ...Calendar });
-        if (FirstdayWeek == 6) {
-          FirstdayWeek = FirstdayWeek - 6;
-        } else {
-          FirstdayWeek = FirstdayWeek + 1;
-        }
-      }
-      return CalendarArray;
-    },
-
-    meisai: function () {
-      this.meisaiList = this.calendarDay;
-      console.log(this.meisaiList);
-      return this.meisaiList;
-    },
-  },
+  }
 };
 </script>
 
@@ -707,28 +699,39 @@ export default {
 #app {
   margin-top: 60px;
 }
+
 .title {
   font-size: 24px;
+}
+
+td,th {
+  text-align: center;
 }
 
 .red {
   color: #ff0000;
 }
+
 .blue {
   color: #0000ff;
 }
 
 .container-fluid {
-max-width: 1400px;
+ min-width: 538px;
+ max-width: 1400px;
 }
 
-td {
-  text-align: center;
-}
-
-tr {
+/* ヘッダーとテーブルヘッダーを画面の上端に固定するのに設定 */
+.head {
+  min-width: 538px;
+  background-color: white;
   position: sticky;
   top: 0; /* Don't forget this, required for the stickiness */
 }
 
+.table > thead {
+  position: sticky;
+  width:100%;
+  top: 374px; /* Don't forget this, required for the stickiness */
+}
 </style>

@@ -103,15 +103,15 @@ function midnightOvertime(starttime, endtime) {
         //深夜の残業時間は勤務終了時間-22時(60*22=1320)-5時となる。
         midnightOvertime = (endTimeMinute - 1320)-overFive;
     } 
-    　//従業時間が540分を超えるかつ勤務終了時間が22時以降かつ5時を超えない場合
-    　else if(totalTime >540 && Number(end[0])>=22 && Number(end[0])<29) {
+      //従業時間が540分を超えるかつ勤務終了時間が22時以降かつ5時を超えない場合
+      else if(totalTime >540 && Number(end[0])>=22 && Number(end[0])<29) {
         //深夜の残業時間は勤務終了時間-22時(60*22=1320)-となる。
         midnightOvertime = endTimeMinute - 1320;
     } else {
         //それ以外の場合は深夜残業時間は0分となる。
         midnightOvertime = 0;
     }
-　　
+
     //深夜残業時間が0より上かつ、残業の基準となる時間(勤務開始時間+540分)が22時を超える場合は
     if(midnightOvertime > 0 && overStandardTime > 1320){
         //深夜残業時間は深夜残業時間-(残業時間の基準となる時間-22時)となる。
