@@ -1,0 +1,38 @@
+#app {
+  margin-top: 60px;
+}
+
+.title {
+  font-size: 24px;
+}
+
+td,th {
+  text-align: center;
+}
+
+.red {
+  color: #ff0000;
+}
+
+.blue {
+  color: #0000ff;
+}
+
+.container-fluid {
+ min-width: 538px;
+ max-width: 1400px;
+}
+
+/* ヘッダーとテーブルヘッダーを画面の上端に固定するのに設定 */
+.head {
+  min-width: 538px;
+  background-color: white;
+  position: sticky;
+  top: 0; /* Don't forget this, required for the stickiness */
+}
+
+.table > thead {
+  position: sticky;
+  width:100%;
+  top: 374px; /* Don't forget this, required for the stickiness */
+}
